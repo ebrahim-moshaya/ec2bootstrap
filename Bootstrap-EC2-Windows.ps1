@@ -9,9 +9,16 @@
 param(
 [Parameter(Mandatory=$true)]
 [string]
-$userPassword
-)
+$userPassword,
+ 
+[Parameter(Mandatory=$true)]
+[string]
+$AWSAccessKey
 
+[Parameter(Mandatory=$true)]
+[string]
+$AWSSecretKey
+)
 
 Start-Transcript -Path 'c:\bootstrap-transcript.txt' -Force
 Set-StrictMode -Version Latest
@@ -139,12 +146,12 @@ Add-Content $log -value "Windows Update has been disabled."
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 function Disable-IEESC
 {
-$AdminKey = “HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}”
-$UserKey = “HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}”
-Set-ItemProperty -path $AdminKey -name “IsInstalled” -value 0
-Set-ItemProperty -path $UserKey -name “IsInstalled” -value 0
+$AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
+$UserKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}"
+Set-ItemProperty -path $AdminKey -name "IsInstalled" -value 0
+Set-ItemProperty -path $UserKey -name "IsInstalled" -value 0
 Stop-Process -Name Explorer
-Write-Host “IE Enhanced Security Configuration (ESC) has been disabled.” -ForegroundColor Green
+Write-Host "IE Enhanced Security Configuration (ESC) has been disabled." -ForegroundColor Green
 }
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
@@ -169,7 +176,7 @@ function Log_Status ($message)
 {
 
 Add-Content $log -value $message
-Send-SQSMessage -QueueUrl $bootstrapqueue -Region "eu-west-1" -MessageBody $message
+Send-SQSMessage -QueueUrl $bootstrapqueue -Region "eu-west-1" -MessageBody $message -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey
 
 }
 
