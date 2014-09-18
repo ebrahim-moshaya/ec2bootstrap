@@ -1,27 +1,51 @@
-# Inject this as user-data of a Windows 2012 AMI, like this (edit the adminPassword to your needs):
+# Inject this as user-data of a Windows 2012 AMI, like this (edit the userPassword to your needs):
 #
 # <powershell>
 # Set-ExecutionPolicy Unrestricted
-# icm $executioncontext.InvokeCommand.NewScriptBlock((New-Object Net.WebClient).DownloadString('https://gist.githubusercontent.com/petemounce/11099158/raw/Bootstrap-EC2-Windows-CloudInit.ps1')) -ArgumentList "adminPassword"
+# icm $executioncontext.InvokeCommand.NewScriptBlock((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/ebrahim-moshaya/ec2bootstrap/b990abc1db41bc6a610018245f079511bcfa753c/Bootstrap-EC2-Windows.ps1')) -ArgumentList "userPassword"
 # </powershell>
 #
 
-
-<powershell>
+param(
+[Parameter(Mandatory=$true)]
+[string]
+$userPassword
+)
 
 # Set Powershell execution policy to Bypass
-Set-ExecutionPolicy Unrestricted
 Set-ExecutionPolicy Bypass -force
-netsh advfirewall set currentprofile state off
 Write-host "Set execution policy to Bypass -force"
+Set-ExecutionPolicy Unrestricted
+
+
+
+Start-Transcript -Path 'c:\bootstrap-transcript.txt' -Force
+$log = 'c:\Bootstrap.txt'
+
+while (($userPassword -eq $null) -or ($userPassword -eq ''))
+{
+$AdminPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty Administrator password" -AsSecureString)))
+}
+
+
+
+
+
+
+
+
+
+
+netsh advfirewall set currentprofile state off
+
 
 # Step 1: Disable UAC
 New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\Policies\System -Name EnableLUA -PropertyType DWord -Value 0 -Force | Out-Null
 Write-Host "User Access Control (UAC) has been disabled." -ForegroundColor Green
 
 $bootstrapqueue = "https://sqs.eu-west-1.amazonaws.com/123412341234/BootstrapQueue"
-$user="jenkins"
-$password="N3wV01c3"
+
+
 
 #Disable password complexity requirements
 "[System Access]" | out-file c:\delete.cfg
@@ -201,5 +225,3 @@ Write-host "Created installers directory"
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
 Log_Status "Finished bootstrapping"
-
-</powershell>
