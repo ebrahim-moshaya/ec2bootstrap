@@ -2,7 +2,7 @@
 #
 # <powershell>
 # Set-ExecutionPolicy Unrestricted
-# icm $executioncontext.InvokeCommand.NewScriptBlock((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/ebrahim-moshaya/ec2bootstrap/b990abc1db41bc6a610018245f079511bcfa753c/Bootstrap-EC2-Windows.ps1')) -ArgumentList "userPassword"
+# icm $executioncontext.InvokeCommand.NewScriptBlock((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/ebrahim-moshaya/ec2bootstrap/master/Bootstrap-EC2-Windows.ps1')) -ArgumentList "userPassword"
 # </powershell>
 #
 
@@ -10,7 +10,7 @@ param(
 [Parameter(Mandatory=$true)]
 [string]
 $userPassword,
- 
+
 [Parameter(Mandatory=$true)]
 [string]
 $AWSAccessKey
@@ -28,9 +28,21 @@ $log = 'c:\Bootstrap.txt'
 $client = new-object System.Net.WebClient
 $bootstrapqueue = "https://sqs.eu-west-1.amazonaws.com/662182053957/BootstrapQueue"
 
+
+
 while (($userPassword -eq $null) -or ($userPassword -eq ''))
 {
 $userPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty User password" -AsSecureString)))
+}
+
+while (($AWSAccessKey -eq $null) -or ($AWSAccessKey -eq ''))
+{
+$AWSAccessKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty User password" -AsSecureString)))
+}
+
+while (($AWSSecretKey -eq $null) -or ($AWSSecretKey -eq ''))
+{
+$AWSSecretKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty User password" -AsSecureString)))
 }
 
 $systemPath = [Environment]::GetFolderPath([Environment+SpecialFolder]::System)
