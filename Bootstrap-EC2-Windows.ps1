@@ -203,6 +203,7 @@ $AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A
 $UserKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}"
 Set-ItemProperty -path $AdminKey -name "IsInstalled" -value 0
 Set-ItemProperty -path $UserKey -name "IsInstalled" -value 0
+Stop-Process -Name Explorer
 }
 
 
@@ -267,15 +268,15 @@ Log_Status "Administrator Pass changed, jenkins user created and added to admin 
 
 
 
-Log_Status "Setting home page for IE" 
-Set-IE-HomePage "http://www.google.co.uk"
-Log_Status "Homepage Set" 
-
-
-
 Log_Status  "Disabling IE Enhanced Security Configuration..." 
 Disable-IEESC
 Log_Status "IE Enhanced Security Configuration (ESC) has been disabled." 
+
+
+
+Log_Status "Setting home page for IE" 
+Set-IE-HomePage "http://www.google.co.uk"
+Log_Status "Homepage Set" 
 
 
 
@@ -355,5 +356,5 @@ Start-Sleep -m 10000
 #Write-Host "Press any key to reboot and finish image configuration"
 #[void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
  
-#Stop-Process -Name Explorer
-#Restart-Computer
+
+Restart-Computer
