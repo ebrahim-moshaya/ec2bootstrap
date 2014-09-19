@@ -37,13 +37,14 @@ $userPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.Inte
 
 while (($AWSAccessKey -eq $null) -or ($AWSAccessKey -eq ''))
 {
-$AWSAccessKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty User password" -AsSecureString)))
+$AWSAccessKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty AWS AccessKey" -AsSecureString)))
 }
 
 while (($AWSSecretKey -eq $null) -or ($AWSSecretKey -eq ''))
 {
-$AWSSecretKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty User password" -AsSecureString)))
+$AWSSecretKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty AWS SecretKey" -AsSecureString)))
 }
+
 
 $systemPath = [Environment]::GetFolderPath([Environment+SpecialFolder]::System)
 $sysNative = [IO.Path]::Combine($env:windir, "sysnative")
