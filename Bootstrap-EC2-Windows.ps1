@@ -214,7 +214,7 @@ Set-ItemProperty -path $UserKey -name "IsInstalled" -value 0
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 function Set-IE-HomePage ($URL)
 {
-set-ItemProperty -path 'HKCU:\Software\Microsoft\Internet Explorer\main' -name "Start Page" -value $URL
+Set-ItemProperty -path "HKCU:\Software\Microsoft\Internet Explorer\main" -name "Start Page" -value $URL
 }
 
 
@@ -266,15 +266,16 @@ UserAccounts
 Log_Status "Administrator Pass changed, jenkins user created and added to admin group"
 
 
-Log_Status  "Disabling IE Enhanced Security Configuration..." 
-Disable-IEESC
-Log_Status "IE Enhanced Security Configuration (ESC) has been disabled." 
-
-
 
 Log_Status "Setting home page for IE" 
 Set-IE-HomePage "http://www.google.co.uk"
 Log_Status "Homepage Set" 
+
+
+
+Log_Status  "Disabling IE Enhanced Security Configuration..." 
+Disable-IEESC
+Log_Status "IE Enhanced Security Configuration (ESC) has been disabled." 
 
 
 
