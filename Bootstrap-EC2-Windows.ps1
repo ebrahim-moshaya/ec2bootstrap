@@ -13,14 +13,14 @@ $userPassword,
 
 [Parameter(Mandatory=$true)]
 [string]
-$AWSAccessKey
+$AWSAccessKey,
 
 [Parameter(Mandatory=$true)]
 [string]
 $AWSSecretKey
 )
 
-Start-Transcript -Path 'c:\bootstrap-transcript.txt' -Force
+Start-Transcript -Path 'c:\bootstrap-transcript.txt' -append -Force 
 Set-StrictMode -Version Latest
 Set-ExecutionPolicy Unrestricted
 
