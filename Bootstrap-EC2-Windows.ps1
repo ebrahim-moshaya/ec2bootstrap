@@ -2,10 +2,11 @@
 #
 # <powershell>
 # Set-ExecutionPolicy Unrestricted
-# icm $executioncontext.InvokeCommand.NewScriptBlock((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/ebrahim-moshaya/ec2bootstrap/master/Bootstrap-EC2-Windows.ps1')) -ArgumentList "userPassword"
+# icm $executioncontext.InvokeCommand.NewScriptBlock((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/ebrahim-moshaya/ec2bootstrap/master/Bootstrap-EC2-Windows.ps1')) -ArgumentList "userPassword", "AWSAccessKey", "AWSSecretKey"
 # </powershell>
 #
 
+# Pass in the following Parameters
 param(
 [Parameter(Mandatory=$true)]
 [string]
@@ -22,7 +23,7 @@ $AWSSecretKey
 
 Start-Transcript -Path 'c:\bootstrap-transcript.txt' -append -Force 
 Set-StrictMode -Version Latest
-Set-ExecutionPolicy Unrestricted
+Set-ExecutionPolicy Unrestricted -force
 
 $log = 'c:\Bootstrap.txt'
 $client = new-object System.Net.WebClient
@@ -62,42 +63,63 @@ cd $Env:USERPROFILE
 Set-Location -Path $Env:USERPROFILE
 [Environment]::CurrentDirectory=(Get-Location -PSProvider FileSystem).ProviderPath
 
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Configure User Accounts
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function UserAccounts
+{
 #change "Administrator" password
 net user Administrator $userPassword
-Add-Content $log -value "Changed Administrator password"
-Write-Host "Administrator password changed" -ForegroundColor Green
+Log_Status "Changed Administrator password"
 
 # Create a jenkins user with Their password, add to Admin group
 net user /add jenkins $userPassword;
 net localgroup Administrators /add jenkins;
-Add-Content $log -value "Added jenkins user"
-Write-Host "jenkins user created and added to admin group" -ForegroundColor Green
+Log_Status "jenkins user created and added to admin group"
+}
 
-# Turn off Windows Firewall for All Networks (Domain, Private, Public)
-#netsh advfirewall set allprofiles state off
-#Write-Host "Windows Firewall has been disabled." -ForegroundColor Green
 
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
 # Configure Firewall
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function Config-Firewall
+{
 netsh advfirewall firewall set rule group="network discovery" new enable=yes
 netsh firewall add portopening TCP 80 "Windows Remote Management";
-Write-Host "Firewall Configured" -ForegroundColor Green
-Add-Content $log -value "Firewall Configured"
+# Turn off Windows Firewall for All Networks (Domain, Private, Public)
+#netsh advfirewall set allprofiles state off
+#Log_Status "Windows Firewall has been disabled."
+}
 
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
 # Disable UAC (User Access Control)
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function Disable-UAC
+{
 New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\Policies\System -Name EnableLUA -PropertyType DWord -Value 0 -Force | Out-Null
-Write-Host "User Access Control (UAC) has been disabled." -ForegroundColor Green
-Add-Content $log -value "User Access Control (UAC) has been disabled."
+}
 
-# Disable password complexity requirements
-"[System Access]" | out-file c:\delete.cfg
-"PasswordComplexity = 0" | out-file c:\delete.cfg -append
-"[Version]" | out-file c:\delete.cfg -append
-'signature="$CHICAGO$"' | out-file c:\delete.cfg -append
-secedit /configure /db C:\Windows\security\new.sdb /cfg c:\delete.cfg /areas SECURITYPOLICY;
-Write-Host "password complexity requirements disabled." -ForegroundColor Green
-Add-Content $log -value "password complexity requirements disabled."
 
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
 # Enable and configure WINRM
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function EnableConfigureWINRM
+{
 winrm quickconfig -q
 winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="512"}'
 winrm set winrm/config '@{MaxTimeoutms="1800000"}'
@@ -105,33 +127,44 @@ winrm set winrm/config/service '@{AllowUnencrypted="true"}'
 winrm set winrm/config/service/auth '@{Basic="true"}'
 # needed for windows to manipulate centralized config files which live of a share. Such as AppFabric.
 winrm set winrm/config/service/auth '@{CredSSP="true"}';
-write-host 'Attempting to enable built in 5985 firewall rule';
+Log_Status "Attempting to enable built in 5985 firewall rule";
 netsh advfirewall firewall add rule name="jenkins-Windows Remote Management (HTTP-In)" dir=in action=allow enable=yes profile=any protocol=tcp localport=5985 remoteip=any;
 netsh advfirewall firewall add rule name="jenkins-Windows Remote Management (HTTPS-In)" dir=in action=allow enable=yes profile=any protocol=tcp localport=5986 remoteip=any;
 netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" profile=public protocol=tcp localport=5985 new remoteip=any;
-write-host 'Adding custom firewall rule for 5985';
-Add-Content $log -value "Adding custom firewall rule for 5985"
+Log_Status "Adding custom firewall rule for 5985"
 netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
 netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
-Write-Host "Opened 5985 & 5986 for incoming winrm"
-Add-Content $log -value "Opened 5985 & 5986 for incoming winrm"
+Log_Status  "Opened 5985 & 5986 for incoming winrm"
 Set-Service winrm -startuptype "auto"
-Write-Host "WINRM Enabled and Configured" -ForegroundColor Green
-Add-Content $log -value "WINRM Enabled and Configured"
+}
 
 
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
 # Disable password complexity requirements
-$seccfg = [IO.Path]::GetTempFileName()
-secedit /export /cfg $seccfg
-(Get-Content $seccfg) | Foreach-Object {$_ -replace "PasswordComplexity\s*=\s*1", "PasswordComplexity=0"} | Set-Content $seccfg
-secedit /configure /db $env:windir\security\new.sdb /cfg $seccfg /areas SECURITYPOLICY
-del $seccfg
-Write-Host "password complexity requirements disabled" -ForegroundColor Green
-Add-Content $log -value "password complexity requirements disabled"
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function Disable-PassComplexity
+{
+"[System Access]" | out-file c:\delete.cfg
+"PasswordComplexity = 0" | out-file c:\delete.cfg -append
+"[Version]" | out-file c:\delete.cfg -append
+'signature="$CHICAGO$"' | out-file c:\delete.cfg -append
+secedit /configure /db C:\Windows\security\new.sdb /cfg c:\delete.cfg /areas SECURITYPOLICY;
+del c:\delete.cfg
+}
 
 
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
 # Disable the shutdown tracker
 # Reference: http://www.askvg.com/how-to-disable-remove-annoying-shutdown-event-tracker-in-windows-server-2003-2008/
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function Disable-Shutdown-Tracker
+{
 If (!(Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability")) {
 New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability"
 }
@@ -139,16 +172,23 @@ New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability
 New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability" -Name "ShutdownReasonUI" -PropertyType DWord -Value 0 -Force -ErrorAction continue
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability" -Name "ShutdownReasonOn" -Value 0
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability" -Name "ShutdownReasonUI" -Value 0
-Write-Host "Shutdown Tracker has been disabled." -ForegroundColor Green
-Add-Content $log -value "Shutdown Tracker has been disabled."
+}
 
-# Disable Automatic Updates
-# Reference: http://www.benmorris.me/2012/05/1st-test-blog-post.html
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#  Disable Automatic Updates
+#  Reference: http://www.benmorris.me/2012/05/1st-test-blog-post.html
+#
+#	Comments:	This function is intended to disable Windows Updates.
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function Disable-WINUPDATES
+{
 $AutoUpdate = (New-Object -com "Microsoft.Update.AutoUpdate").Settings
 $AutoUpdate.NotificationLevel = 1
 $AutoUpdate.Save()
-Write-Host "Windows Update has been disabled." -ForegroundColor Green
-Add-Content $log -value "Windows Update has been disabled."
+}
 
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
@@ -163,9 +203,8 @@ $AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A
 $UserKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}"
 Set-ItemProperty -path $AdminKey -name "IsInstalled" -value 0
 Set-ItemProperty -path $UserKey -name "IsInstalled" -value 0
-Stop-Process -Name Explorer
-Write-Host "IE Enhanced Security Configuration (ESC) has been disabled." -ForegroundColor Green
 }
+
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 #	Function:	Set-IE-HomePage
@@ -178,6 +217,7 @@ function Set-IE-HomePage ($URL)
 set-ItemProperty -path 'HKCU:\Software\Microsoft\Internet Explorer\main' -name "Start Page" -value $URL
 }
 
+
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 #	Function:	Log_Status
 #
@@ -189,9 +229,10 @@ function Log_Status ($message)
 {
 
 Add-Content $log -value $message
+Write-Host $message -ForegroundColor Green
 Send-SQSMessage -QueueUrl $bootstrapqueue -Region "eu-west-1" -MessageBody $message -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey
-
 }
+
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 #
@@ -199,8 +240,7 @@ Send-SQSMessage -QueueUrl $bootstrapqueue -Region "eu-west-1" -MessageBody $mess
 #
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
-Log_Status "Started bootstrapping"
-
+Log_Status "Started bootstrapping EC2 Instance"
 
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
@@ -209,17 +249,56 @@ Log_Status "Started bootstrapping"
 #
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
+Log_Status  "Disabling User Access Control (UAC)" 
+Disable-UAC
+Log_Status "User Access Control (UAC) has been disabled" 
+
+
+
+Log_Status  "Configuring Firewall" 
+Config-Firewall
+Log_Status "Firewall Configured" 
+
+
+
+Log_Status "Changing Administrator Pass, Creating jenkins user and add to admin group"
+UserAccounts
+Log_Status "Administrator Pass changed, jenkins user created and added to admin group"
+
 
 Log_Status  "Disabling IE Enhanced Security Configuration..." 
-
 Disable-IEESC
+Log_Status "IE Enhanced Security Configuration (ESC) has been disabled." 
 
-Log_Status "Disabled IE Enhanced Security Configuration" 
 
 
 Log_Status "Setting home page for IE" 
-
 Set-IE-HomePage "http://www.google.co.uk"
+Log_Status "Homepage Set" 
+
+
+
+Log_Status "Disabling Windows Updates" 
+Disable-WINUPDATES
+Log_Status "Windows Updates Disabled" 
+
+
+
+Log_Status "Disabling Shutdown Tracker" 
+Disable-Shutdown-Tracker
+Log_Status "Shutdown Tracker has been disabled Disabled" 
+
+
+
+Log_Status "Disabling password complexity requirements" 
+Disable-PassComplexity
+Log_Status "password complexity requirements disabled" 
+
+
+
+Log_Status "Enabling and Configuring WINRM" 
+EnableConfigureWINRM
+Log_Status "WINRM Enabled and Configured" 
 
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
@@ -275,4 +354,5 @@ Start-Sleep -m 10000
 #Write-Host "Press any key to reboot and finish image configuration"
 #[void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
  
-Restart-Computer
+#Stop-Process -Name Explorer
+#Restart-Computer
