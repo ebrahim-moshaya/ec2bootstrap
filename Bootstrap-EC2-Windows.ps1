@@ -8,17 +8,17 @@
 
 # Pass in the following Parameters
 param(
-[Parameter(Mandatory=$true)]
-[string]
-$userPassword,
-
-[Parameter(Mandatory=$true)]
-[string]
-$AWSAccessKey,
-
-[Parameter(Mandatory=$true)]
-[string]
-$AWSSecretKey
+  [Parameter(Mandatory=$true)]
+  [string]
+  $userPassword,
+  
+  [Parameter(Mandatory=$true)]
+  [string]
+  $AWSAccessKey,
+  
+  [Parameter(Mandatory=$true)]
+  [string]
+  $AWSSecretKey
 )
 
 Start-Transcript -Path 'c:\bootstrap-transcript.txt' -append -Force 
@@ -33,17 +33,17 @@ $bootstrapqueue = "https://sqs.eu-west-1.amazonaws.com/662182053957/BootstrapQue
 
 while (($userPassword -eq $null) -or ($userPassword -eq ''))
 {
-$userPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty User password" -AsSecureString)))
+  $userPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty User password" -AsSecureString)))
 }
 
 while (($AWSAccessKey -eq $null) -or ($AWSAccessKey -eq ''))
 {
-$AWSAccessKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty AWS AccessKey" -AsSecureString)))
+  $AWSAccessKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty AWS AccessKey" -AsSecureString)))
 }
 
 while (($AWSSecretKey -eq $null) -or ($AWSSecretKey -eq ''))
 {
-$AWSSecretKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty AWS SecretKey" -AsSecureString)))
+  $AWSSecretKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty AWS SecretKey" -AsSecureString)))
 }
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
@@ -72,6 +72,53 @@ Set-Location -Path $Env:USERPROFILE
 
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#	Function:	Download-File
+#
+#	Comments:	This function is intended to download a specific file from S3.
+#
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+function Download-Bucket-File ($Filename, $Bucket, $Destination)
+{
+  $status = "Downloading " + $Filename + " from S3 [" + $Bucket + "]"
+  
+  Log_Status $status
+  
+  
+  $FullPath = $Destination + "\" + $Filename
+  
+  Read-S3Object -BucketName $Bucket -Key $Filename -File $FullPath -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey
+  
+  Wait-Until-Downloaded $FullPath
+  
+  $status = "Downloaded " + $Filename + " from S3 [" + $Bucket + "]"
+  
+  Log_Status $status
+  
+}
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#	Function:	Wait-Until-Downloaded
+#
+#	Comments:	This function is intended to wait until a particular file has been downloaded.
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+function Wait-Until-Downloaded ($Path)
+{
+  While (1 -eq 1) {
+    IF (Test-Path $Path ) {
+      #file exists. break loop
+      break
+    }
+    #sleep for 60 seconds, then check again
+    Start-Sleep -s 60
+  }
+}
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 #
 # Configure User Accounts
 #
@@ -79,14 +126,14 @@ Set-Location -Path $Env:USERPROFILE
 
 function UserAccounts
 {
-#change "Administrator" password
-net user Administrator $userPassword
-Log_Status "Changed Administrator password"
-
-# Create a jenkins user with Their password, add to Admin group
-net user /add jenkins $userPassword;
-net localgroup Administrators /add jenkins;
-Log_Status "jenkins user created and added to admin group"
+  #change "Administrator" password
+  net user Administrator $userPassword
+  Log_Status "Changed Administrator password"
+  
+  # Create a jenkins user with Their password, add to Admin group
+  net user /add jenkins $userPassword;
+  net localgroup Administrators /add jenkins;
+  Log_Status "jenkins user created and added to admin group"
 }
 
 
@@ -99,13 +146,13 @@ Log_Status "jenkins user created and added to admin group"
 
 function Config-Firewall
 {
-netsh advfirewall firewall set rule group="network discovery" new enable=yes
-netsh firewall add portopening TCP 80 "Windows Remote Management";
-netsh advfirewall firewall add rule name="SMB" dir=in action=allow protocol=TCP localport=445 profile=any
-Netsh firewall set portopening tcp 445 smb enable
-# Turn off Windows Firewall for All Networks (Domain, Private, Public)
-#netsh advfirewall set allprofiles state off
-#Log_Status "Windows Firewall has been disabled."
+  netsh advfirewall firewall set rule group="network discovery" new enable=yes
+  netsh firewall add portopening TCP 80 "Windows Remote Management";
+  netsh advfirewall firewall add rule name="SMB" dir=in action=allow protocol=TCP localport=445 profile=any
+  Netsh firewall set portopening tcp 445 smb enable
+  # Turn off Windows Firewall for All Networks (Domain, Private, Public)
+  #netsh advfirewall set allprofiles state off
+  #Log_Status "Windows Firewall has been disabled."
 }
 
 
@@ -117,7 +164,7 @@ Netsh firewall set portopening tcp 445 smb enable
 
 function Disable-UAC
 {
-New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\Policies\System -Name EnableLUA -PropertyType DWord -Value 0 -Force | Out-Null
+  New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\Policies\System -Name EnableLUA -PropertyType DWord -Value 0 -Force | Out-Null
 }
 
 
@@ -129,22 +176,30 @@ New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\Policies\S
 
 function EnableConfigureWINRM
 {
-winrm quickconfig -q
-winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="1024"}'
-winrm set winrm/config '@{MaxTimeoutms="1800000"}'
-winrm set winrm/config/service '@{AllowUnencrypted="true"}'
-winrm set winrm/config/service/auth '@{Basic="true"}'
-# needed for windows to manipulate centralized config files which live of a share. Such as AppFabric.
-winrm set winrm/config/service/auth '@{CredSSP="true"}';
-Log_Status "Attempting to enable built in 5985 firewall rule";
-netsh advfirewall firewall add rule name="jenkins-Windows Remote Management (HTTP-In)" dir=in action=allow enable=yes profile=any protocol=tcp localport=5985 remoteip=any;
-netsh advfirewall firewall add rule name="jenkins-Windows Remote Management (HTTPS-In)" dir=in action=allow enable=yes profile=any protocol=tcp localport=5986 remoteip=any;
-netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" profile=public protocol=tcp localport=5985 new remoteip=any;
-Log_Status "Adding custom firewall rule for 5985"
-netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
-netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
-Log_Status  "Opened 5985 & 5986 for incoming winrm"
-Set-Service winrm -startuptype "auto"
+  
+  #check winrm id, if it's not valid and LocalAccountTokenFilterPolicy isn't established, do it
+  $id = &winrm id
+  if (($id -eq $null) -and (Get-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System -name LocalAccountTokenFilterPolicy -ErrorAction SilentlyContinue) -eq $null)
+  {
+    New-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System -name LocalAccountTokenFilterPolicy -value 1 -propertyType dword
+    Log_Status "Added LocalAccountTokenFilterPolicy since winrm id could not be executed"
+  }
+  winrm quickconfig -q
+  winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="1024"}'
+  winrm set winrm/config '@{MaxTimeoutms="1800000"}'
+  winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+  winrm set winrm/config/service/auth '@{Basic="true"}'
+  # needed for windows to manipulate centralized config files which live of a share. Such as AppFabric.
+  winrm set winrm/config/service/auth '@{CredSSP="true"}';
+  Log_Status "Attempting to enable built in 5985 firewall rule";
+  netsh advfirewall firewall add rule name="jenkins-Windows Remote Management (HTTP-In)" dir=in action=allow enable=yes profile=any protocol=tcp localport=5985 remoteip=any;
+  netsh advfirewall firewall add rule name="jenkins-Windows Remote Management (HTTPS-In)" dir=in action=allow enable=yes profile=any protocol=tcp localport=5986 remoteip=any;
+  netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" profile=public protocol=tcp localport=5985 new remoteip=any;
+  Log_Status "Adding custom firewall rule for 5985"
+  netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
+  netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+  Log_Status  "Opened 5985 & 5986 for incoming winrm"
+  Set-Service winrm -startuptype "auto"
 }
 
 
@@ -156,12 +211,12 @@ Set-Service winrm -startuptype "auto"
 
 function Disable-PassComplexity
 {
-"[System Access]" | out-file c:\delete.cfg
-"PasswordComplexity = 0" | out-file c:\delete.cfg -append
-"[Version]" | out-file c:\delete.cfg -append
-'signature="$CHICAGO$"' | out-file c:\delete.cfg -append
-secedit /configure /db C:\Windows\security\new.sdb /cfg c:\delete.cfg /areas SECURITYPOLICY;
-del c:\delete.cfg
+  "[System Access]" | out-file c:\delete.cfg
+  "PasswordComplexity = 0" | out-file c:\delete.cfg -append
+  "[Version]" | out-file c:\delete.cfg -append
+  'signature="$CHICAGO$"' | out-file c:\delete.cfg -append
+  secedit /configure /db C:\Windows\security\new.sdb /cfg c:\delete.cfg /areas SECURITYPOLICY;
+  del c:\delete.cfg
 }
 
 
@@ -174,13 +229,13 @@ del c:\delete.cfg
 
 function Disable-Shutdown-Tracker
 {
-If (!(Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability")) {
-New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability"
-}
-New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability" -Name "ShutdownReasonOn" -PropertyType DWord -Value 0 -Force -ErrorAction continue
-New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability" -Name "ShutdownReasonUI" -PropertyType DWord -Value 0 -Force -ErrorAction continue
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability" -Name "ShutdownReasonOn" -Value 0
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability" -Name "ShutdownReasonUI" -Value 0
+  If (!(Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability")) {
+    New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability"
+  }
+  New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability" -Name "ShutdownReasonOn" -PropertyType DWord -Value 0 -Force -ErrorAction continue
+  New-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability" -Name "ShutdownReasonUI" -PropertyType DWord -Value 0 -Force -ErrorAction continue
+  Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability" -Name "ShutdownReasonOn" -Value 0
+  Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability" -Name "ShutdownReasonUI" -Value 0
 }
 
 
@@ -194,9 +249,9 @@ Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability
 
 function Disable-WINUPDATES
 {
-$AutoUpdate = (New-Object -com "Microsoft.Update.AutoUpdate").Settings
-$AutoUpdate.NotificationLevel = 1
-$AutoUpdate.Save()
+  $AutoUpdate = (New-Object -com "Microsoft.Update.AutoUpdate").Settings
+  $AutoUpdate.NotificationLevel = 1
+  $AutoUpdate.Save()
 }
 
 
@@ -208,11 +263,11 @@ $AutoUpdate.Save()
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 function Disable-IEESC
 {
-$AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
-$UserKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}"
-Set-ItemProperty -path $AdminKey -name "IsInstalled" -value 0
-Set-ItemProperty -path $UserKey -name "IsInstalled" -value 0
-Stop-Process -Name Explorer
+  $AdminKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A7-37EF-4b3f-8CFC-4F3A74704073}"
+  $UserKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}"
+  Set-ItemProperty -path $AdminKey -name "IsInstalled" -value 0
+  Set-ItemProperty -path $UserKey -name "IsInstalled" -value 0
+  Stop-Process -Name Explorer
 }
 
 
@@ -224,9 +279,126 @@ Stop-Process -Name Explorer
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 function Set-IE-HomePage ($URL)
 {
-Set-ItemProperty -path "HKCU:\Software\Microsoft\Internet Explorer\main" -name "Start Page" -value $URL
+  &Set-ItemProperty -path "HKCU:\Software\Microsoft\Internet Explorer\main" -name "Start Page" -value $URL
 }
 
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Configure Powershell
+# enable powershell servermanager cmdlets (only for 2008 r2 + above)
+#
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function PS-CONFIG
+{
+  if ($IsCore)
+  {
+    DISM /Online /Enable-Feature /FeatureName:MicrosoftWindowsPowerShell /FeatureName:ServerManager-PSH-Cmdlets /FeatureName:BestPractices-PSH-Cmdlets
+    Log_Status "Enabled ServerManager and BestPractices Cmdlets"
+    
+    #enable .NET flavors - on server core only -- errors on regular 2008
+    DISM /Online /Enable-Feature /FeatureName:NetFx2-ServerCore /FeatureName:NetFx2-ServerCore-WOW64 /FeatureName:NetFx3-ServerCore /FeatureName:NetFx3-ServerCore-WOW64
+    Log_Status "Enabled .NET frameworks 2 and 3 for x86 and x64"
+  }
+}
+
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Download and Install 7-Zip
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function 7-ZIP
+{
+  $7zUrl = if ($Is32Bit) { 'http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922.msi/download' } `
+  else { 'http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922-x64.msi/download' }
+  
+  $client.DownloadFile( $7zUrl, '7z922.msi')
+  Start-Process -FilePath "msiexec.exe" -ArgumentList '/i 7z922.msi /norestart /q INSTALLDIR="c:\program files\7-zip"' -Wait
+  SetX Path "${Env:Path};C:\Program Files\7-zip" /m
+  $Env:Path += ';C:\Program Files\7-Zip'
+  del 7z922.msi
+  Log_Status "Installed 7-zip from $7zUrl and updated path"
+}
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Download and Install C++ Redistributable Package 2010
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function VCREDIST
+{
+  $vcredist = if ($Is32Bit) { 'http://download.microsoft.com/download/5/B/C/5BC5DBB3-652D-4DCE-B14A-475AB85EEF6E/vcredist_x86.exe'} `
+  else { 'http://download.microsoft.com/download/3/2/2/3224B87F-CFA0-4E70-BDA3-3DE650EFEBA5/vcredist_x64.exe' }
+  
+  $client.DownloadFile( $vcredist, 'vcredist.exe')
+  Start-Process -FilePath 'C:\Users\Administrator\vcredist.exe' -ArgumentList '/norestart /q' -Wait
+  del vcredist.exe
+  Log_Status "Installed VC++ 2010 Redistributable from $vcredist and updated path"
+}
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Download and Install curl
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function CURL
+{
+  $curlUrl = if ($Is32Bit) { 'http://www.paehl.com/open_source/?download=curl_724_0_ssl.zip' } `
+  else { 'http://curl.haxx.se/download/curl-7.33.0-win64-ssl-sspi.zip' }
+  
+  $client.DownloadFile( $curlUrl, 'curl.zip')
+  &7z e curl.zip `-o`"c:\program files\curl`"
+  if ($Is32Bit)
+  {
+    $client.DownloadFile( 'http://www.paehl.com/open_source/?download=libssl.zip', 'libssl.zip')
+    &7z e libssl.zip `-o`"c:\program files\curl`"
+    del libssl.zip
+  }
+  SetX Path "${Env:Path};C:\Program Files\Curl" /m
+  $Env:Path += ';C:\Program Files\Curl'
+  del curl.zip
+  Log_Status "Installed Curl from $curlUrl and updated path"
+}
+
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Download and Install Chef Client
+# https://opscode-omnibus-packages.s3.amazonaws.com/windows/2008r2/x86_64/chef-windows-11.16.2-1.windows.msi
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function CHEF
+{
+  # Create a new chef directory
+  $chef_dir = "C:\chef"
+  if (!(Test-Path -path $chef_dir))
+  {
+    mkdir $chef_dir
+  }
+  Log_Status "Created chef directory" 
+  #	Download Chef.rb and validation key
+  Log_Status "Download bucket files"
+  Download-File "client.rb"  "chefbootstrap-jenkins" $chef_dir
+  Download-File "validation.pem"  "chefbootstrap-jenkins" $chef_dir
+  
+  Log_Status  "Download Chef-client installer..."
+  & 'C:\Program Files\Curl\curl.exe' -# -G -k -L https://opscode-omnibus-packages.s3.amazonaws.com/windows/2008r2/x86_64/chef-windows-11.16.2-1.windows.msi -o chef-windows-11.16.2-1.windows.msi
+  Log_Status  "Executing Chef installer..."
+  Download-File "chef-client-11.8.2-1.windows.msi"  "installers-bucket" "C:\installers"
+  Start-Process -FilePath "msiexec.exe" -ArgumentList '/qn /passive /i chef-windows-11.16.2-1.windows.msi ADDLOCAL="ChefClientFeature,ChefServiceFeature" /norestart' -Wait
+  SetX Path "${Env:Path};C:\opscode\chef\bin" /m
+  SetX Path "${Env:Path};C:\opscode\chef\embedded\bin" /m
+  chef-service-manager -a install
+  &sc.exe config chef-client start= demand
+  Log_Status  "Executed Chef installer" 
+}
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 #	Function:	Log_Status
@@ -237,10 +409,10 @@ Set-ItemProperty -path "HKCU:\Software\Microsoft\Internet Explorer\main" -name "
 
 function Log_Status ($message)
 {
-
-Add-Content $log -value $message
-Write-Host $message -ForegroundColor Green
-Send-SQSMessage -QueueUrl $bootstrapqueue -Region "eu-west-1" -MessageBody $message -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey
+  
+  Add-Content $log -value $message
+  Write-Host $message -ForegroundColor Green
+  Send-SQSMessage -QueueUrl $bootstrapqueue -Region "eu-west-1" -MessageBody $message -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey
 }
 
 
@@ -289,6 +461,12 @@ Log_Status "Homepage Set"
 
 
 
+Log_Status "Configuring Powershell" 
+PS-CONFIG
+Log_Status "Powershell Configured" 
+
+
+
 Log_Status "Disabling Windows Updates" 
 Disable-WINUPDATES
 Log_Status "Windows Updates Disabled" 
@@ -312,44 +490,28 @@ EnableConfigureWINRM
 Log_Status "WINRM Enabled and Configured" 
 
 
-#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
-#
-#	Section	:	Create folders
-#
-#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
-
-# Create a new scripts directory
-
-Log_Status  "Creating directories.."
-
-$chef_dir = "C:\chef"
-if (!(Test-Path -path $chef_dir))
-{
-mkdir $chef_dir
-}
-Write-host "Created chef directory"
-
-# Create a new cookbooks directory
-
-$cookbook_dir = "C:\chef\cookbooks"
-if (!(Test-Path -path $cookbook_dir))
-{
-mkdir $cookbook_dir
-}
-Write-host "Created cookbooks directory"
+Log_Status "Downloading and Installing 7-ZIP" 
+7-ZIP
+Log_Status "Finished installing 7-zip" 
 
 
 
-# Create a new installers directory
+Log_Status "Downloading and Installing C++ Redistributable Package 2010" 
+VCREDIST
+Log_Status "Finished installing C++ Redistributable Package 2010"
 
-$installer_dir = "C:\installers"
-if (!(Test-Path -path $installer_dir ))
-{
-mkdir $installer_dir 
-}
-Write-host "Created installers directory"
 
+
+Log_Status "Downloading and Installing curl" 
+CURL
+Log_Status "Finished installing curl" 
+
+
+
+Log_Status "Downloading and Installing Chef Client" 
+CHEF
+Log_Status "Finished installing Chef Client" 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
 
