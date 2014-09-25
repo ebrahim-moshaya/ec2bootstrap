@@ -46,14 +46,21 @@ while (($AWSSecretKey -eq $null) -or ($AWSSecretKey -eq ''))
 $AWSSecretKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty AWS SecretKey" -AsSecureString)))
 }
 
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Detect Processor Architecture and OperatingSystemSKU
+# http://blogs.msdn.com/b/david.wang/archive/2006/03/26/howto-detect-process-bitness.aspx
+# http://msdn.microsoft.com/en-us/library/ms724358.aspx
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
 $systemPath = [Environment]::GetFolderPath([Environment+SpecialFolder]::System)
 $sysNative = [IO.Path]::Combine($env:windir, "sysnative")
-#http://blogs.msdn.com/b/david.wang/archive/2006/03/26/howto-detect-process-bitness.aspx
+
 $Is32Bit = (($Env:PROCESSOR_ARCHITECTURE -eq 'x86') -and ($Env:PROCESSOR_ARCHITEW6432 -eq $null))
 Add-Content $log -value "Is 32-bit [$Is32Bit]"
 
-#http://msdn.microsoft.com/en-us/library/ms724358.aspx
+
 $coreEditions = @(0x0c,0x27,0x0e,0x29,0x2a,0x0d,0x28,0x1d)
 $IsCore = $coreEditions -contains (Get-WmiObject -Query "Select OperatingSystemSKU from Win32_OperatingSystem" | Select -ExpandProperty OperatingSystemSKU)
 Add-Content $log -value "Is Core [$IsCore]"
@@ -94,6 +101,8 @@ function Config-Firewall
 {
 netsh advfirewall firewall set rule group="network discovery" new enable=yes
 netsh firewall add portopening TCP 80 "Windows Remote Management";
+netsh advfirewall firewall add rule name="SMB" dir=in action=allow protocol=TCP localport=445 profile=any
+Netsh firewall set portopening tcp 445 smb enable
 # Turn off Windows Firewall for All Networks (Domain, Private, Public)
 #netsh advfirewall set allprofiles state off
 #Log_Status "Windows Firewall has been disabled."
@@ -121,7 +130,7 @@ New-ItemProperty -Path HKLM:Software\Microsoft\Windows\CurrentVersion\Policies\S
 function EnableConfigureWINRM
 {
 winrm quickconfig -q
-winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="512"}'
+winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="1024"}'
 winrm set winrm/config '@{MaxTimeoutms="1800000"}'
 winrm set winrm/config/service '@{AllowUnencrypted="true"}'
 winrm set winrm/config/service/auth '@{Basic="true"}'
