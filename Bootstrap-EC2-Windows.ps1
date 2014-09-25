@@ -72,7 +72,7 @@ Set-Location -Path $Env:USERPROFILE
 
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
-#	Function:	Download-File
+#	Function:	Download-Bucket-File
 #
 #	Comments:	This function is intended to download a specific file from S3.
 #
@@ -313,15 +313,15 @@ function PS-CONFIG
 
 function SEVENZIP
 {
-  $7zUrl = if ($Is32Bit) { 'http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922.msi/download' } `
+  $7zUri = if ($Is32Bit) { 'http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922.msi/download' } `
   else { 'http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922-x64.msi/download' }
   
-  $client.DownloadFile( $7zUrl, '7z922.msi')
+  $client.DownloadFile( $7zUri, '7z922.msi')
   Start-Process -FilePath "msiexec.exe" -ArgumentList '/i 7z922.msi /norestart /q INSTALLDIR="c:\program files\7-zip"' -Wait
   SetX Path "${Env:Path};C:\Program Files\7-zip" /m
   $Env:Path += ';C:\Program Files\7-Zip'
   del 7z922.msi
-  Log_Status "Installed 7-zip from $7zUrl and updated path"
+  Log_Status "Installed 7-zip from $7zUri and updated path"
 }
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
@@ -349,10 +349,10 @@ function VCREDIST
 
 function CURL
 {
-  $curlUrl = if ($Is32Bit) { 'http://www.paehl.com/open_source/?download=curl_724_0_ssl.zip' } `
+  $curlUri = if ($Is32Bit) { 'http://www.paehl.com/open_source/?download=curl_724_0_ssl.zip' } `
   else { 'http://curl.haxx.se/download/curl-7.33.0-win64-ssl-sspi.zip' }
   
-  $client.DownloadFile( $curlUrl, 'curl.zip')
+  $client.DownloadFile( $curlUri, 'curl.zip')
   &7z e curl.zip `-o`"c:\program files\curl`"
   if ($Is32Bit)
   {
@@ -363,7 +363,7 @@ function CURL
   SetX Path "${Env:Path};C:\Program Files\Curl" /m
   $Env:Path += ';C:\Program Files\Curl'
   del curl.zip
-  Log_Status "Installed Curl from $curlUrl and updated path"
+  Log_Status "Installed Curl from $curlUri and updated path"
 }
 
 
@@ -385,13 +385,12 @@ function CHEF
   Log_Status "Created chef directory" 
   #	Download Chef.rb and validation key
   Log_Status "Download bucket files"
-  Download-File "client.rb"  "chefbootstrap-jenkins" $chef_dir
-  Download-File "validation.pem"  "chefbootstrap-jenkins" $chef_dir
+  Download-Bucket-File "client.rb"  "chefbootstrap-jenkins" $chef_dir
+  Download-Bucket-File "validation.pem"  "chefbootstrap-jenkins" $chef_dir
   
   Log_Status  "Download Chef-client installer..."
   & 'C:\Program Files\Curl\curl.exe' -# -G -k -L https://opscode-omnibus-packages.s3.amazonaws.com/windows/2008r2/x86_64/chef-windows-11.16.2-1.windows.msi -o chef-windows-11.16.2-1.windows.msi
   Log_Status  "Executing Chef installer..."
-  Download-File "chef-client-11.8.2-1.windows.msi"  "installers-bucket" "C:\installers"
   Start-Process -FilePath "msiexec.exe" -ArgumentList '/qn /passive /i chef-windows-11.16.2-1.windows.msi ADDLOCAL="ChefClientFeature,ChefServiceFeature" /norestart' -Wait
   SetX Path "${Env:Path};C:\opscode\chef\bin" /m
   SetX Path "${Env:Path};C:\opscode\chef\embedded\bin" /m
