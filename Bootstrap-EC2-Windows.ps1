@@ -311,7 +311,7 @@ function PS-CONFIG
 #
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
-function 7-ZIP
+function SEVENZIP
 {
   $7zUrl = if ($Is32Bit) { 'http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922.msi/download' } `
   else { 'http://sourceforge.net/projects/sevenzip/files/7-Zip/9.22/7z922-x64.msi/download' }
@@ -492,7 +492,7 @@ Log_Status "WINRM Enabled and Configured"
 
 
 Log_Status "Downloading and Installing 7-ZIP" 
-7-ZIP
+SEVENZIP
 Log_Status "Finished installing 7-zip" 
 
 
