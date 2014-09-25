@@ -349,10 +349,12 @@ function VCREDIST
 
 function CURL
 {
+
   $curlUri = if ($Is32Bit) { 'http://www.paehl.com/open_source/?download=curl_724_0_ssl.zip' } `
   else { 'http://curl.haxx.se/download/curl-7.33.0-win64-ssl-sspi.zip' }
-  
+ 
   $client.DownloadFile( $curlUri, 'curl.zip')
+
   &7z e curl.zip `-o`"c:\program files\curl`"
   if ($Is32Bit)
   {
