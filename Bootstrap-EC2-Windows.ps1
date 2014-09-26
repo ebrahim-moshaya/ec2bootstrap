@@ -347,9 +347,8 @@ function VCREDIST
 #
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
-function CURL
+function CURL-CONFIG
 {
-
   $curlUri = if ($Is32Bit) { 'http://www.paehl.com/open_source/?download=curl_724_0_ssl.zip' } `
   else { 'http://curl.haxx.se/download/curl-7.23.1-win64-ssl-sspi.zip' }
  
@@ -504,7 +503,7 @@ Log_Status "Finished installing C++ Redistributable Package 2010"
 
 
 Log_Status "Downloading and Installing curl" 
-CURL
+CURL-CONFIG
 Log_Status "Finished installing curl" 
 
 
