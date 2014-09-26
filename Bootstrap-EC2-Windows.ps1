@@ -388,13 +388,14 @@ function CHEF
   Download-Bucket-File "client.rb"  "chefbootstrap-jenkins" $chef_dir
   Download-Bucket-File "validation.pem"  "chefbootstrap-jenkins" $chef_dir
   Log_Status "Rename Computer to easily identify it on the chef server" 
-  Rename-Computer -NewName JenkinsSlave-${env:computername}
+  Rename-Computer -NewName JenkinsSlave-${env:computername} -Force
   Log_Status  "Download Chef-client installer..."
   & 'C:\Program Files\Curl\curl.exe' -# -G -k -L https://opscode-omnibus-packages.s3.amazonaws.com/windows/2008r2/x86_64/chef-windows-11.16.2-1.windows.msi -o chef-windows-11.16.2-1.windows.msi
   Log_Status  "Executing Chef installer..."
   Start-Process -FilePath "msiexec.exe" -ArgumentList '/qn /passive /i chef-windows-11.16.2-1.windows.msi ADDLOCAL="ChefClientFeature,ChefServiceFeature" /norestart' -Wait
   SetX Path "${Env:Path};C:\opscode\chef\bin" /m
   SetX Path "${Env:Path};C:\opscode\chef\embedded\bin" /m
+  $Env:Path += ';C:\opscode\chef\bin;C:\opscode\chef\embedded\bin'
   chef-service-manager -a install
   &sc.exe config chef-client start= demand
   Log_Status  "Executed Chef installer" 
