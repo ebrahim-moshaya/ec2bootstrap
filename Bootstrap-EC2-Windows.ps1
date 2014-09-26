@@ -387,7 +387,8 @@ function CHEF
   Log_Status "Download bucket files"
   Download-Bucket-File "client.rb"  "chefbootstrap-jenkins" $chef_dir
   Download-Bucket-File "validation.pem"  "chefbootstrap-jenkins" $chef_dir
-  
+  Log_Status "Rename Computer to easily identify it on the chef server" 
+  Rename-Computer -NewName JenkinsSlave-${env:computername}
   Log_Status  "Download Chef-client installer..."
   & 'C:\Program Files\Curl\curl.exe' -# -G -k -L https://opscode-omnibus-packages.s3.amazonaws.com/windows/2008r2/x86_64/chef-windows-11.16.2-1.windows.msi -o chef-windows-11.16.2-1.windows.msi
   Log_Status  "Executing Chef installer..."
