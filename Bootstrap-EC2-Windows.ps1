@@ -390,6 +390,7 @@ function CHEF
   Log_Status "Download bucket files"
   Download-Bucket-File "client.rb"  "chefbootstrap-jenkins" $chef_dir
   Download-Bucket-File "validation.pem"  "chefbootstrap-jenkins" $chef_dir
+  Download-Bucket-File "knife.rb"  "chefbootstrap-jenkins" $chef_dir
   Log_Status "Rename Computer to easily identify it on the chef server" 
   Rename-Computer -NewName JenkinsSlave-${env:computername} -Force
   Log_Status  "Download Chef-client installer..."
@@ -401,6 +402,8 @@ function CHEF
   Log_Status "Create System Environment variable for the chef node name"
   [Environment]::SetEnvironmentVariable("CHEFNODE", "JenkinsSlave-${env:Computername}", "Machine")
   "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
+  "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\knife.rb -append -Encoding UTF8
+  knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_slave]'
   chef-service-manager -a install
   &sc.exe config chef-client start= auto
   chef-client
