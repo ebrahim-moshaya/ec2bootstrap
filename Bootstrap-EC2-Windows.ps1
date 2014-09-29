@@ -400,7 +400,7 @@ function CHEF
   $Env:Path += ';C:\opscode\chef\embedded\bin'
   Log_Status "Create System Environment variable for the chef node name"
   [Environment]::SetEnvironmentVariable("CHEFNODE", "JenkinsSlave-${env:Computername}", "Machine")
-  "node_name JenkinsSlave-${env:ComputerName}" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
+  "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
   chef-service-manager -a install
   &sc.exe config chef-client start= auto
   chef-client
