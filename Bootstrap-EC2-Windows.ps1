@@ -278,9 +278,9 @@ function Disable-IEESC
 #	Comments:	This function is intended to set the home page for Internet Explorer.
 #
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
-function Set-IE-HomePage ($URL)
+function Set-IEHomePage ($URL)
 {
-  Set-ItemProperty -path "HKCU:\Software\Microsoft\Internet Explorer\main" -name "Start Page" -value $URL  2>&1 | tee -a $log
+  Set-ItemProperty -path "HKCU:\Software\Microsoft\Internet Explorer\main" -name "Start Page" -value $URL
 }
 
 
@@ -404,11 +404,11 @@ function CHEF
   "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
   "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\knife.rb -append -Encoding UTF8
   cd $chef_dir
-  knife node run_list add "JenkinsSlave-${env:Computername}" 'role[jenkins_slave]' 2>&1 | tee -a c:\chef\knife.log
   chef-service-manager -a install
   &sc.exe config chef-client start= auto
   chef-client
-  #knife node 
+  knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_slave]' 2>&1 | tee -a c:\chef\knife.log
+  chef-client
   Log_Status  "Executed Chef installer" 
 }
 
@@ -422,6 +422,7 @@ function CHEF
 function Log_Status ($message)
 {
   
+  Add-Content $log -value $message
   Add-Content $log -value $message
   Write-Host $message -ForegroundColor Green
   Send-SQSMessage -QueueUrl $bootstrapqueue -Region "eu-west-1" -MessageBody $message -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey
@@ -468,7 +469,7 @@ Log_Status "IE Enhanced Security Configuration (ESC) has been disabled."
 
 
 Log_Status "Setting home page for IE" 
-Set-IE-HomePage "http://www.google.co.uk"
+Set-IEHomePage "http://www.google.co.uk"
 Log_Status "Homepage Set" 
 
 
