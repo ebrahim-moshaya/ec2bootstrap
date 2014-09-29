@@ -189,6 +189,7 @@ function EnableConfigureWINRM
   winrm set winrm/config '@{MaxTimeoutms="1800000"}'
   winrm set winrm/config/service '@{AllowUnencrypted="true"}'
   winrm set winrm/config/service/auth '@{Basic="true"}'
+  winrm set winrm/config/client/auth '@{Basic="true"}'
   # needed for windows to manipulate centralized config files which live of a share. Such as AppFabric.
   winrm set winrm/config/service/auth '@{CredSSP="true"}';
   Log_Status "Attempting to enable built in 5985 firewall rule";
@@ -399,7 +400,7 @@ function CHEF
   $Env:Path += ';C:\opscode\chef\embedded\bin'
   Log_Status "Create System Environment variable for the chef node name"
   [Environment]::SetEnvironmentVariable("CHEFNODE", "JenkinsSlave-${env:Computername}", "Machine")
-  "node_name '${env:ChefNode}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
+  "node_name JenkinsSlave-${env:ComputerName}" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
   chef-service-manager -a install
   &sc.exe config chef-client start= auto
   chef-client
