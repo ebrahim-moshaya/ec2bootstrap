@@ -280,7 +280,7 @@ function Disable-IEESC
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 function Set-IE-HomePage ($URL)
 {
-  Set-ItemProperty -path "HKCU:\Software\Microsoft\Internet Explorer\main" -name "Start Page" -value $URL
+  Set-ItemProperty -path "HKCU:\Software\Microsoft\Internet Explorer\main" -name "Start Page" -value $URL  2>&1 | tee -a $log
 }
 
 
