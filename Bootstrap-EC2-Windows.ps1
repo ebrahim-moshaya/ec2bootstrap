@@ -397,10 +397,11 @@ function CHEF
   Start-Process -FilePath "msiexec.exe" -ArgumentList '/qn /passive /i chef-windows-11.16.2-1.windows.msi ADDLOCAL="ChefClientFeature,ChefServiceFeature" /norestart' -Wait
   SetX Path "${Env:Path};C:\opscode\chef\embedded\bin" /m
   $Env:Path += ';C:\opscode\chef\embedded\bin'
+  Log_Status "Create System Environment variable for the chef node name"
+  [Environment]::SetEnvironmentVariable("CHEFNODE", "JenkinsSlave-${env:Computername}", "Machine")
+  "node_name '${env:ChefNode}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
   chef-service-manager -a install
   &sc.exe config chef-client start= auto
-  Log_Status "Create System Environment variable for the chef node name"
-  [Environment]::SetEnvironmentVariable("CHEFNODE", "${env:Computername}", "Machine")
   chef-client
   #knife node 
   Log_Status  "Executed Chef installer" 
