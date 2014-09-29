@@ -404,7 +404,7 @@ function CHEF
   "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
   "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\knife.rb -append -Encoding UTF8
   cd $chef_dir
-  knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_slave]'
+  knife node run_list add "JenkinsSlave-${env:Computername}" 'role[jenkins_slave]'
   chef-service-manager -a install
   &sc.exe config chef-client start= auto
   chef-client
