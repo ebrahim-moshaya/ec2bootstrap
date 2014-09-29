@@ -399,6 +399,7 @@ function CHEF
   $Env:Path += ';C:\opscode\chef\embedded\bin'
   chef-service-manager -a install
   &sc.exe config chef-client start= auto
+  Log_Status "Create System Environment variable for the chef node name"
   [Environment]::SetEnvironmentVariable("CHEFNODE", "${env:Computername}", "Machine")
   chef-client
   #knife node 
