@@ -577,12 +577,6 @@ Log_Status "Shutdown Tracker has been disabled Disabled"
 
 
 
-Log_Status "Enabling and Configuring WINRM" 
-EnableConfigureWINRM
-Log_Status "WINRM Enabled and Configured" 
-
-
-
 Log_Status "Downloading and Installing 7-ZIP" 
 SEVENZIP
 Log_Status "Finished installing 7-zip" 
@@ -630,6 +624,12 @@ CHEF
 Log_Status "Finished installing Chef Client" 
 
 
+
+Log_Status "Enabling and Configuring WINRM" 
+EnableConfigureWINRM
+Log_Status "WINRM Enabled and Configured" 
+
+
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
 
@@ -646,4 +646,4 @@ Start-Sleep -m 10000
 #[void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
  
 
-Restart-Computer
+#Restart-Computer
