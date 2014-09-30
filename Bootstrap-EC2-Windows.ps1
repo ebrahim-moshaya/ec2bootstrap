@@ -466,15 +466,15 @@ Log_Status "password complexity requirements disabled"
 
 
 
-#Log_Status "Changing Administrator Pass, Creating jenkins user and add to admin group"
-#UserAccounts
-#Log_Status "Administrator Pass changed, jenkins user created and added to admin group"
+Log_Status "Changing Administrator Pass, Creating jenkins user and add to admin group"
+UserAccounts
+Log_Status "Administrator Pass changed, jenkins user created and added to admin group"
 
 
 
-##Log_Status  "Disabling IE Enhanced Security Configuration..." 
-#Disable-IEESC
-#Log_Status "IE Enhanced Security Configuration (ESC) has been disabled." 
+Log_Status  "Disabling IE Enhanced Security Configuration..." 
+Disable-IEESC
+Log_Status "IE Enhanced Security Configuration (ESC) has been disabled." 
 
 
 
