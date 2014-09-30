@@ -470,24 +470,24 @@ function CHEF
   Download-Bucket-File "client.rb"  "chefbootstrap-jenkins" $chef_dir
   Download-Bucket-File "validation.pem"  "chefbootstrap-jenkins" $chef_dir
   Download-Bucket-File "knife.rb"  "chefbootstrap-jenkins" $chef_dir
-  Log_Status "Rename Computer to easily identify it on the chef server" 
-  Rename-Computer -NewName JenkinsSlave-${env:computername} -Force
+  #Log_Status "Rename Computer to easily identify it on the chef server" 
+  #Rename-Computer -NewName JenkinsSlave-${env:computername} -Force
   Log_Status  "Download Chef-client installer..."
   & 'C:\Program Files\Curl\curl.exe' -# -G -k -L https://opscode-omnibus-packages.s3.amazonaws.com/windows/2008r2/x86_64/chef-windows-11.16.2-1.windows.msi -o chef-windows-11.16.2-1.windows.msi
   Log_Status  "Executing Chef installer..."
   Start-Process -FilePath "msiexec.exe" -ArgumentList '/qn /passive /i chef-windows-11.16.2-1.windows.msi ADDLOCAL="ChefClientFeature,ChefServiceFeature" /norestart' -Wait
   SetX Path "${Env:Path};C:\opscode\chef\embedded\bin" /m
   $Env:Path += ';C:\opscode\chef\embedded\bin'
-  Log_Status "Create System Environment variable for the chef node name"
-  [Environment]::SetEnvironmentVariable("CHEFNODE", "JenkinsSlave-${env:Computername}", "Machine")
-  "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
-  "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\knife.rb -append -Encoding UTF8
-  cd $chef_dir
+  #Log_Status "Create System Environment variable for the chef node name"
+  #[Environment]::SetEnvironmentVariable("CHEFNODE", "JenkinsSlave-${env:Computername}", "Machine")
+  #"node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
+  #"node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\knife.rb -append -Encoding UTF8
+  #cd $chef_dir
   chef-service-manager -a install
   &sc.exe config chef-client start= auto
-  chef-client
-  knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_slave]' 2>&1 | tee -a c:\chef\knife.log
-  chef-client
+  #chef-client
+  #knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_slave]' 2>&1 | tee -a c:\chef\knife.log
+  #chef-client
   Log_Status  "Executed Chef installer" 
 }
 
