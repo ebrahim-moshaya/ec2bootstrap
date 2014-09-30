@@ -199,6 +199,7 @@ function EnableConfigureWINRM
   Log_Status "Adding custom firewall rule for 5985"
   netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
   netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+  winrm set winrm/config/service/auth '@{Negotiate="false"}'
   Log_Status  "Opened 5985 & 5986 for incoming winrm"
   Set-Service winrm -startuptype "auto"
 }
@@ -268,6 +269,9 @@ function Disable-IEESC
   $UserKey = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\{A509B1A8-37EF-4b3f-8CFC-4F3A74704073}"
   Set-ItemProperty -path $AdminKey -name "IsInstalled" -value 0
   Set-ItemProperty -path $UserKey -name "IsInstalled" -value 0
+  Rundll32 iesetup.dll, IEHardenLMSettings,1,True
+  Rundll32 iesetup.dll, IEHardenUser,1,True
+  Rundll32 iesetup.dll, IEHardenAdmin,1,True
   Stop-Process -Name Explorer
 }
 
@@ -450,45 +454,9 @@ Log_Status "User Access Control (UAC) has been disabled"
 
 
 
-Log_Status  "Configuring Firewall" 
-Config-Firewall
-Log_Status "Firewall Configured" 
-
-
-
-Log_Status "Changing Administrator Pass, Creating jenkins user and add to admin group"
-UserAccounts
-Log_Status "Administrator Pass changed, jenkins user created and added to admin group"
-
-
-
-Log_Status  "Disabling IE Enhanced Security Configuration..." 
-Disable-IEESC
-Log_Status "IE Enhanced Security Configuration (ESC) has been disabled." 
-
-
-
-Log_Status "Setting home page for IE" 
-Set-IEHomePage "http://www.google.co.uk"
-Log_Status "Homepage Set" 
-
-
-
-Log_Status "Configuring Powershell" 
-PS-CONFIG
-Log_Status "Powershell Configured" 
-
-
-
-Log_Status "Disabling Windows Updates" 
-Disable-WINUPDATES
-Log_Status "Windows Updates Disabled" 
-
-
-
-Log_Status "Disabling Shutdown Tracker" 
-Disable-Shutdown-Tracker
-Log_Status "Shutdown Tracker has been disabled Disabled" 
+#Log_Status  "Configuring Firewall" 
+#Config-Firewall
+#Log_Status "Firewall Configured" 
 
 
 
@@ -498,33 +466,70 @@ Log_Status "password complexity requirements disabled"
 
 
 
-Log_Status "Enabling and Configuring WINRM" 
-EnableConfigureWINRM
-Log_Status "WINRM Enabled and Configured" 
+#Log_Status "Changing Administrator Pass, Creating jenkins user and add to admin group"
+#UserAccounts
+#Log_Status "Administrator Pass changed, jenkins user created and added to admin group"
 
 
 
-Log_Status "Downloading and Installing 7-ZIP" 
-SEVENZIP
-Log_Status "Finished installing 7-zip" 
+##Log_Status  "Disabling IE Enhanced Security Configuration..." 
+#Disable-IEESC
+#Log_Status "IE Enhanced Security Configuration (ESC) has been disabled." 
 
 
 
-Log_Status "Downloading and Installing C++ Redistributable Package 2010" 
-VCREDIST
-Log_Status "Finished installing C++ Redistributable Package 2010"
+Log_Status "Setting home page for IE" 
+Set-IEHomePage "http://www.google.co.uk"
+Log_Status "Homepage Set" 
 
 
 
-Log_Status "Downloading and Installing curl" 
-CURL-CONFIG
-Log_Status "Finished installing curl" 
+#Log_Status "Configuring Powershell" 
+#PS-CONFIG
+#Log_Status "Powershell Configured" 
 
 
 
-Log_Status "Downloading and Installing Chef Client" 
-CHEF
-Log_Status "Finished installing Chef Client" 
+#Log_Status "Disabling Windows Updates" 
+#Disable-WINUPDATES
+#Log_Status "Windows Updates Disabled" 
+
+
+
+#Log_Status "Disabling Shutdown Tracker" 
+#Disable-Shutdown-Tracker
+#Log_Status "Shutdown Tracker has been disabled Disabled" 
+
+
+
+#Log_Status "Enabling and Configuring WINRM" 
+#Log_Status "Enabling and Configuring WINRM" 
+#EnableConfigureWINRM
+#Log_Status "WINRM Enabled and Configured" 
+
+
+
+#Log_Status "Downloading and Installing 7-ZIP" 
+#SEVENZIP
+#Log_Status "Finished installing 7-zip" 
+
+
+
+#Log_Status "Downloading and Installing C++ Redistributable Package 2010" 
+#VCREDIST
+#Log_Status "Finished installing C++ Redistributable Package 2010"
+
+
+
+#Log_Status "Downloading and Installing curl" 
+#CURL-CONFIG
+#Log_Status "Finished installing curl" 
+
+
+
+#Log_Status "Downloading and Installing Chef Client" 
+#CHEF
+#Log_Status "Finished installing Chef Client" 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
 
