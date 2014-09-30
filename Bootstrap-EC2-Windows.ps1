@@ -346,6 +346,24 @@ function VCREDIST
   Log_Status "Installed VC++ 2010 Redistributable from $vcredist and updated path"
 }
 
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Download and Install Java Runtime Environment
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function JRE
+{
+  $JRE = if ($Is32Bit) { 'http://javadl.sun.com/webapps/download/AutoDL?BundleId=95123' } `
+  else { 'http://javadl.sun.com/webapps/download/AutoDL?BundleId=95125' }
+
+  
+  $client.DownloadFile( $JRE, 'jre-windows.exe')
+  Start-Process -FilePath C:\Users\Administrator\jre-windows.exe -ArgumentList "/s /norestart" -Wait
+  del jre-windows.exe
+}
+
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 #
 # Download and Install curl
@@ -369,6 +387,63 @@ function CURL-CONFIG
   $Env:Path += ';C:\Program Files\Curl'
   del curl.zip
   Log_Status "Installed Curl from $curlUri and updated path"
+}
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Download and Install chocolatey
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function chocolatey
+{
+  #chocolatey - standard one line installer doesn't work on Core b/c Shell.Application can't unzip
+  if (-not $IsCore)
+  {
+    Invoke-Expression ((new-object net.webclient).DownloadString('http://bit.ly/psChocInstall'))
+  }
+  else
+  {
+    #[Environment]::SetEnvironmentVariable('ChocolateyInstall', 'c:\nuget', [System.EnvironmentVariableTarget]::User)
+    #if (![System.IO.Directory]::Exists('c:\nuget')) {[System.IO.Directory]::CreateDirectory('c:\nuget')}
+ 
+    $tempDir = Join-Path $env:TEMP "chocInstall"
+    if (![System.IO.Directory]::Exists($tempDir)) {[System.IO.Directory]::CreateDirectory($tempDir)}
+    $file = Join-Path $tempDir "chocolatey.zip"
+    $client.DownloadFile("http://chocolatey.org/api/v1/package/chocolatey", $file)
+ 
+    &7z x $file `-o`"$tempDir`"
+    Log_Status 'Extracted Chocolatey'
+    $chocInstallPS1 = Join-Path (Join-Path $tempDir 'tools') 'chocolateyInstall.ps1'
+ 
+    & $chocInstallPS1
+ 
+    Log_Status 'Installed Chocolatey / Verifying Paths'
+  }
+}
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Download and Install NSSM
+# http://nssm.cc/
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function NSSM
+{
+  choco install NSSM
+}
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Configure slave.jar to run as service
+# http://nssm.cc/
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function jenkinsslave
+{
+  nssm install jenkinsslavejar "java" "-jar C:\Windows\Temp\slave.jar"
 }
 
 
@@ -484,46 +559,69 @@ Log_Status "Homepage Set"
 
 
 
-#Log_Status "Configuring Powershell" 
-#PS-CONFIG
-#Log_Status "Powershell Configured" 
+Log_Status "Configuring Powershell" 
+PS-CONFIG
+Log_Status "Powershell Configured" 
 
 
 
-#Log_Status "Disabling Windows Updates" 
-#Disable-WINUPDATES
-#Log_Status "Windows Updates Disabled" 
+Log_Status "Disabling Windows Updates" 
+Disable-WINUPDATES
+Log_Status "Windows Updates Disabled" 
 
 
 
-#Log_Status "Disabling Shutdown Tracker" 
-#Disable-Shutdown-Tracker
-#Log_Status "Shutdown Tracker has been disabled Disabled" 
+Log_Status "Disabling Shutdown Tracker" 
+Disable-Shutdown-Tracker
+Log_Status "Shutdown Tracker has been disabled Disabled" 
 
 
 
-#Log_Status "Enabling and Configuring WINRM" 
 #Log_Status "Enabling and Configuring WINRM" 
 #EnableConfigureWINRM
 #Log_Status "WINRM Enabled and Configured" 
 
 
 
-#Log_Status "Downloading and Installing 7-ZIP" 
-#SEVENZIP
-#Log_Status "Finished installing 7-zip" 
+Log_Status "Downloading and Installing 7-ZIP" 
+SEVENZIP
+Log_Status "Finished installing 7-zip" 
 
 
 
-#Log_Status "Downloading and Installing C++ Redistributable Package 2010" 
-#VCREDIST
-#Log_Status "Finished installing C++ Redistributable Package 2010"
+Log_Status "Downloading and Installing C++ Redistributable Package 2010" 
+VCREDIST
+Log_Status "Finished installing C++ Redistributable Package 2010"
 
 
 
-#Log_Status "Downloading and Installing curl" 
-#CURL-CONFIG
-#Log_Status "Finished installing curl" 
+Log_Status "Downloading and Installing JRE" 
+JRE
+Log_Status "Finished installing JRE"
+
+
+
+Log_Status "Downloading and Installing curl" 
+CURL-CONFIG
+Log_Status "Finished installing curl" 
+
+
+
+Log_Status  "Installing chocolatey" 
+chocolatey
+Log_Status "chocolatey Installed" 
+
+
+
+Log_Status  "Installing NSSM" 
+NSSM
+Log_Status "chocolatey NSSM" 
+
+
+
+Log_Status  "Creating jenkinsslavejar service" 
+jenkinsslave
+Log_Status "jenkinsslavejar service created" 
 
 
 
