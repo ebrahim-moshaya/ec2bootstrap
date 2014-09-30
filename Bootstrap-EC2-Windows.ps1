@@ -189,18 +189,18 @@ function EnableConfigureWINRM
   winrm set winrm/config '@{MaxTimeoutms="1800000"}'
   winrm set winrm/config/service '@{AllowUnencrypted="true"}'
   winrm set winrm/config/service/auth '@{Basic="true"}'
-  winrm set winrm/config/client/auth '@{Basic="true"}'
+  #winrm set winrm/config/client/auth '@{Basic="true"}'
   # needed for windows to manipulate centralized config files which live of a share. Such as AppFabric.
-  winrm set winrm/config/service/auth '@{CredSSP="true"}';
+  #winrm set winrm/config/service/auth '@{CredSSP="true"}';
   Log_Status "Attempting to enable built in 5985 firewall rule";
   netsh advfirewall firewall add rule name="jenkins-Windows Remote Management (HTTP-In)" dir=in action=allow enable=yes profile=any protocol=tcp localport=5985 remoteip=any;
   netsh advfirewall firewall add rule name="jenkins-Windows Remote Management (HTTPS-In)" dir=in action=allow enable=yes profile=any protocol=tcp localport=5986 remoteip=any;
-  netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" profile=public protocol=tcp localport=5985 new remoteip=any;
-  Log_Status "Adding custom firewall rule for 5985"
-  netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
-  netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+  #netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" profile=public protocol=tcp localport=5985 new remoteip=any;
+  Log_Status "Adding custom firewall rule for 5985 and 5986"
+  #netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
+  #netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+  #Log_Status  "Opened 5985 & 5986 for incoming winrm"
   winrm set winrm/config/service/auth '@{Negotiate="false"}'
-  Log_Status  "Opened 5985 & 5986 for incoming winrm"
   Set-Service winrm -startuptype "auto"
 }
 
@@ -577,9 +577,9 @@ Log_Status "Shutdown Tracker has been disabled Disabled"
 
 
 
-#Log_Status "Enabling and Configuring WINRM" 
-#EnableConfigureWINRM
-#Log_Status "WINRM Enabled and Configured" 
+Log_Status "Enabling and Configuring WINRM" 
+EnableConfigureWINRM
+Log_Status "WINRM Enabled and Configured" 
 
 
 
@@ -625,9 +625,11 @@ Log_Status "jenkinsslavejar service created"
 
 
 
-#Log_Status "Downloading and Installing Chef Client" 
-#CHEF
-#Log_Status "Finished installing Chef Client" 
+Log_Status "Downloading and Installing Chef Client" 
+CHEF
+Log_Status "Finished installing Chef Client" 
+
+
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
 
