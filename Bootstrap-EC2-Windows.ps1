@@ -478,16 +478,16 @@ function CHEF
   Start-Process -FilePath "msiexec.exe" -ArgumentList '/qn /passive /i chef-windows-11.16.2-1.windows.msi ADDLOCAL="ChefClientFeature,ChefServiceFeature" /norestart' -Wait
   SetX Path "${Env:Path};C:\opscode\chef\embedded\bin" /m
   $Env:Path += ';C:\opscode\chef\embedded\bin'
-  #Log_Status "Create System Environment variable for the chef node name"
-  #[Environment]::SetEnvironmentVariable("CHEFNODE", "JenkinsSlave-${env:Computername}", "Machine")
-  #"node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
-  #"node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\knife.rb -append -Encoding UTF8
-  #cd $chef_dir
-  #chef-service-manager -a install
-  #&sc.exe config chef-client start= auto
-  #chef-client
-  #knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_slave]' 2>&1 | tee -a c:\chef\knife.log
-  #chef-client
+  Log_Status "Create System Environment variable for the chef node name"
+  [Environment]::SetEnvironmentVariable("CHEFNODE", "JenkinsSlave-${env:Computername}", "Machine")
+  "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
+  "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\knife.rb -append -Encoding UTF8
+  cd $chef_dir
+  chef-service-manager -a install
+  &sc.exe config chef-client start= auto
+  chef-client
+  knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_slave]' 2>&1 | tee -a c:\chef\knife.log
+  chef-client
   Log_Status  "Executed Chef installer" 
 }
 
