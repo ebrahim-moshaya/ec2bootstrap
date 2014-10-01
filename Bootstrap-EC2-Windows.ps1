@@ -609,13 +609,8 @@ Log_Status "chocolatey Installed"
 
 Log_Status  "Installing NSSM" 
 NSSM
-Log_Status "chocolatey NSSM" 
+Log_Status "Installed NSSM" 
 
-
-
-Log_Status  "Creating jenkinsslavejar service" 
-jenkinsslave
-Log_Status "jenkinsslavejar service created" 
 
 
 
@@ -638,6 +633,9 @@ Log_Status "WINRM Enabled and Configured"
 
 Log_Status "Finished bootstrapping"
 
+Log_Status  "Creating jenkinsslavejar service" 
+jenkinsslave
+Log_Status "jenkinsslavejar service created" 
 
 #wait a bit, it's windows after all
 Start-Sleep -m 10000
