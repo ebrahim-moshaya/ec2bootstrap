@@ -27,6 +27,7 @@ Set-ExecutionPolicy Unrestricted -force
 
 $log = 'c:\Bootstrap.txt'
 $client = new-object System.Net.WebClient
+$shell_app = new-object -com shell.application
 $bootstrapqueue = "https://sqs.eu-west-1.amazonaws.com/662182053957/BootstrapQueue"
 
 
@@ -97,6 +98,38 @@ function Download-Bucket-File ($Filename, $Bucket, $Destination)
   
 }
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#	Function:	Download-and-unzip-File
+#
+#	Comments:	This function is intended to download a specific file from S3 and then unzip it
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function unzip-File ($Filename, $Destination, $Unzipto)
+{
+
+$FullPath = $Destination + "\" + $Filename
+
+$zip_file = $shell_app.namespace($fullpath )
+
+$status = "Unzipping " + $Filename 
+
+Log_Status $status
+
+
+#set the destination directory for the extracts
+$UnzipDirectory = $shell_app.namespace($Unzipto)
+
+#unzip the file
+$UnzipDirectory.Copyhere($zip_file.items())
+
+$status = "Unzipped " + $Filename 
+
+Log_Status $status
+
+}
+
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 #	Function:	Wait-Until-Downloaded
@@ -364,6 +397,7 @@ function JRE
   del jre-windows.exe
 }
 
+
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 #
 # Download and Install curl
@@ -376,11 +410,12 @@ function CURL-CONFIG
   else { 'http://curl.haxx.se/download/curl-7.33.0-win64-ssl-sspi.zip' }
  
   $client.DownloadFile( $curlUri, 'curl.zip')
-  &7z e curl.zip `-o`"c:\program files\curl`"
+  mkdir "c:\program files\curl"
+  unzip-File "curl.zip" "C:\Users\Administrator" "c:\program files\curl"
   if ($Is32Bit)
   {
     $client.DownloadFile( 'http://www.paehl.com/open_source/?download=libssl.zip', 'libssl.zip')
-    &7z e libssl.zip `-o`"c:\program files\curl`"
+    unzip-File "libssl.zip" "C:\Users\Administrator" "c:\program files\curl"
     del libssl.zip
   }
   SetX Path "${Env:Path};C:\Program Files\Curl" /m
@@ -412,7 +447,7 @@ function chocolatey
     $file = Join-Path $tempDir "chocolatey.zip"
     $client.DownloadFile("http://chocolatey.org/api/v1/package/chocolatey", $file)
  
-    &7z x $file `-o`"$tempDir`"
+    unzip-File "chocolatey.zip" $tempDir $tempDir
     Log_Status 'Extracted Chocolatey'
     $chocInstallPS1 = Join-Path (Join-Path $tempDir 'tools') 'chocolateyInstall.ps1'
  
@@ -476,6 +511,7 @@ function CHEF
   & 'C:\Program Files\Curl\curl.exe' -# -G -k -L https://opscode-omnibus-packages.s3.amazonaws.com/windows/2008r2/x86_64/chef-windows-11.16.2-1.windows.msi -o chef-windows-11.16.2-1.windows.msi
   Log_Status  "Executing Chef installer..."
   Start-Process -FilePath "msiexec.exe" -ArgumentList '/qn /passive /i chef-windows-11.16.2-1.windows.msi ADDLOCAL="ChefClientFeature,ChefServiceFeature" /norestart' -Wait
+  del chef-windows-11.16.2-1.windows.msi
   SetX Path "${Env:Path};C:\opscode\chef\embedded\bin" /m
   $Env:Path += ';C:\opscode\chef\embedded\bin'
   Log_Status "Create System Environment variable for the chef node name"
@@ -490,6 +526,40 @@ function CHEF
   chef-client
   Log_Status  "Executed Chef installer" 
 }
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Download and Install freeSSHd
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function freeSSHd
+{
+  $freeSShd = 'http://www.freesshd.com/freeSSHd.exe'
+
+  
+  $client.DownloadFile( $freeSShd, 'freeSSHd.exe')
+  Start-Process -FilePath C:\Users\Administrator\freeSSHd.exe -ArgumentList '/VERYSILENT /NOICON /norestart /SUPPRESSMSGBOXES /LOADINF="%SOFTWARE%\system\freesshd/freesshd.inf"' -Wait
+  del freeSSHd.exe
+}
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+# Download and Install freeSSHd
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+function cygwin
+{
+  $cygwin = if ($Is32Bit) { 'https://cygwin.com/setup-x86.exe' } `
+  else { 'https://cygwin.com/setup-x86_64.exe' }
+
+  
+  $client.DownloadFile( $cygwin, 'cygwin-setup.exe')
+  Start-Process -FilePath C:\Users\Administrator\freeSSHd.exe -ArgumentList '/VERYSILENT /NOICON /norestart /SUPPRESSMSGBOXES /LOADINF="%SOFTWARE%\system\freesshd/freesshd.inf"' -Wait
+  del freeSSHd.exe
+}
+
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 #	Function:	Log_Status
@@ -577,9 +647,9 @@ Log_Status "Shutdown Tracker has been disabled Disabled"
 
 
 
-Log_Status "Downloading and Installing 7-ZIP" 
-SEVENZIP
-Log_Status "Finished installing 7-zip" 
+#Log_Status "Downloading and Installing 7-ZIP" 
+#SEVENZIP
+#Log_Status "Finished installing 7-zip" 
 
 
 
@@ -619,6 +689,11 @@ CHEF
 Log_Status "Finished installing Chef Client" 
 
 
+#Log_Status "Downloading and Installing freeSSHd" 
+#freeSSHd
+#Log_Status "Finished installing freeSSHd"
+
+
 
 Log_Status "Enabling and Configuring WINRM" 
 EnableConfigureWINRM
@@ -633,9 +708,9 @@ Log_Status "WINRM Enabled and Configured"
 
 Log_Status "Finished bootstrapping"
 
-Log_Status  "Creating jenkinsslavejar service" 
-jenkinsslave
-Log_Status "jenkinsslavejar service created" 
+#Log_Status  "Creating jenkinsslavejar service" 
+#jenkinsslave
+#Log_Status "jenkinsslavejar service created" 
 
 #wait a bit, it's windows after all
 Start-Sleep -m 10000
