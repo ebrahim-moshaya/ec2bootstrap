@@ -683,10 +683,16 @@ Log_Status "Installed NSSM"
 
 
 
+Log_Status "Enabling and Configuring WINRM" 
+EnableConfigureWINRM
+Log_Status "WINRM Enabled and Configured" 
+
+
 
 Log_Status "Downloading and Installing Chef Client" 
 CHEF
 Log_Status "Finished installing Chef Client" 
+
 
 
 #Log_Status "Downloading and Installing freeSSHd" 
@@ -695,9 +701,7 @@ Log_Status "Finished installing Chef Client"
 
 
 
-Log_Status "Enabling and Configuring WINRM" 
-EnableConfigureWINRM
-Log_Status "WINRM Enabled and Configured" 
+
 
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
