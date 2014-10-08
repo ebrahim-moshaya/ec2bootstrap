@@ -710,7 +710,7 @@ Log_Status "Finished bootstrapping"
 #Log_Status "jenkinsslavejar service created" 
 
 #wait a bit, it's windows after all
-Start-Sleep -m 10000
+#Start-Sleep -m 10000
 
 #Write-Host "Press any key to reboot and finish image configuration"
 #[void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
