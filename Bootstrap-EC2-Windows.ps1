@@ -523,6 +523,7 @@ function CHEF
   &sc.exe config chef-client start= auto
   chef-client
   knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_slave]' 2>&1 | tee -a c:\chef\knife.log
+  chef-client
   Log_Status  "Executed Chef installer" 
 }
 
@@ -687,24 +688,16 @@ EnableConfigureWINRM
 Log_Status "WINRM Enabled and Configured" 
 
 #wait a bit, it's windows after all
-Start-Sleep -m 5000
+
 
 Log_Status "Downloading and Installing Chef Client" 
 CHEF
 Log_Status "Finished installing Chef Client" 
 
 
-
 #Log_Status "Downloading and Installing freeSSHd" 
 #freeSSHd
 #Log_Status "Finished installing freeSSHd"
-
-
-
-
-
-
-#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
 
 
@@ -719,7 +712,6 @@ Log_Status "Finished bootstrapping"
 #wait a bit, it's windows after all
 Start-Sleep -m 10000
 
-chef-client
 #Write-Host "Press any key to reboot and finish image configuration"
 #[void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
  
