@@ -593,9 +593,9 @@ Log_Status "Started bootstrapping EC2 Instance"
 #
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
-Log_Status  "Disabling User Access Control (UAC)" 
-Disable-UAC
-Log_Status "User Access Control (UAC) has been disabled" 
+#Log_Status  "Disabling User Access Control (UAC)" 
+#Disable-UAC
+#Log_Status "User Access Control (UAC) has been disabled" 
 
 
 
@@ -623,9 +623,9 @@ Log_Status "IE Enhanced Security Configuration (ESC) has been disabled."
 
 
 
-Log_Status "Setting home page for IE" 
-Set-IEHomePage "http://www.google.co.uk"
-Log_Status "Homepage Set" 
+#Log_Status "Setting home page for IE" 
+#Set-IEHomePage "http://www.google.co.uk"
+#Log_Status "Homepage Set" 
 
 
 
@@ -677,9 +677,9 @@ Log_Status "chocolatey Installed"
 
 
 
-Log_Status  "Installing NSSM" 
-NSSM
-Log_Status "Installed NSSM" 
+#Log_Status  "Installing NSSM" 
+#NSSM
+#Log_Status "Installed NSSM" 
 
 
 
