@@ -167,6 +167,10 @@ function UserAccounts
   net user /add jenkins $userPassword;
   net localgroup Administrators /add jenkins;
   Log_Status "jenkins user created and added to admin group"
+  
+  net user /add cyg_server $userPassword;
+  net localgroup Administrators /add cyg_server;
+  Log_Status "cyg_server user created and added to admin group"
 }
 
 
