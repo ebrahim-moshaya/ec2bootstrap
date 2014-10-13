@@ -561,6 +561,7 @@ function cygwin
   if (!(Test-Path -path $cygwin_home_dir))
   {
     mkdir $cygwin_home_dir
+	chmod 777 -R $cygwin_home_dir
   }
   Download-Bucket-File "authorized_keys"  "chefbootstrap-jenkins" $cygwin_home_dir
 }
