@@ -557,13 +557,12 @@ function freeSSHd
 
 function cygwin
 {
-  $cygwin = if ($Is32Bit) { 'https://cygwin.com/setup-x86.exe' } `
-  else { 'https://cygwin.com/setup-x86_64.exe' }
-
-  
-  $client.DownloadFile( $cygwin, 'cygwin-setup.exe')
-  Start-Process -FilePath C:\Users\Administrator\freeSSHd.exe -ArgumentList '/VERYSILENT /NOICON /norestart /SUPPRESSMSGBOXES /LOADINF="%SOFTWARE%\system\freesshd/freesshd.inf"' -Wait
-  del freeSSHd.exe
+  $cygwin_home_dir = "C:\cygwin\home\jenkins\.ssh"
+  if (!(Test-Path -path $cygwin_home_dir))
+  {
+    mkdir $cygwin_home_dir
+  }
+  Download-Bucket-File "authorized_keys"  "chefbootstrap-jenkins" $cygwin_home_dir
 }
 
 
@@ -693,7 +692,11 @@ Log_Status "Enabling and Configuring WINRM"
 EnableConfigureWINRM
 Log_Status "WINRM Enabled and Configured" 
 
-#wait a bit, it's windows after all
+
+Log_Status "Downloading ssh authorized key" 
+cygwin
+Log_Status "Finished downloading ssh authorized key" 
+
 
 
 Log_Status "Downloading and Installing Chef Client" 
