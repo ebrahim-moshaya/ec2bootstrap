@@ -693,10 +693,6 @@ EnableConfigureWINRM
 Log_Status "WINRM Enabled and Configured" 
 
 
-Log_Status "Downloading ssh authorized key" 
-cygwin
-Log_Status "Finished downloading ssh authorized key" 
-
 
 
 Log_Status "Downloading and Installing Chef Client" 
