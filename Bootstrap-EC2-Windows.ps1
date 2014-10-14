@@ -168,9 +168,6 @@ function UserAccounts
   net localgroup Administrators /add jenkins;
   Log_Status "jenkins user created and added to admin group"
   
-  net user /add cyg_server $userPassword;
-  net localgroup Administrators /add cyg_server;
-  Log_Status "cyg_server user created and added to admin group"
 }
 
 
@@ -547,22 +544,6 @@ function freeSSHd
   $client.DownloadFile( $freeSShd, 'freeSSHd.exe')
   Start-Process -FilePath C:\Users\Administrator\freeSSHd.exe -ArgumentList '/VERYSILENT /NOICON /norestart /SUPPRESSMSGBOXES /LOADINF="%SOFTWARE%\system\freesshd/freesshd.inf"' -Wait
   del freeSSHd.exe
-}
-
-#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
-#
-# Download and Install freeSSHd
-#
-#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
-
-function cygwin
-{
-  $cygwin_home_dir = "C:\cygwin\home\jenkins\.ssh"
-  if (!(Test-Path -path $cygwin_home_dir))
-  {
-    mkdir $cygwin_home_dir
-  }
-  Download-Bucket-File "authorized_keys"  "chefbootstrap-jenkins" $cygwin_home_dir
 }
 
 
