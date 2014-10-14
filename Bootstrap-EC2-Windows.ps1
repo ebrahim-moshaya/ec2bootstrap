@@ -511,10 +511,10 @@ function CHEF
   #Log_Status "Rename Computer to easily identify it on the chef server" 
   #Rename-Computer -NewName JenkinsSlave-${env:computername} -Force
   Log_Status  "Download Chef-client installer..."
-  & 'C:\Program Files\Curl\curl.exe' -# -G -k -L https://opscode-omnibus-packages.s3.amazonaws.com/windows/2008r2/x86_64/chef-windows-11.16.2-1.windows.msi -o chef-windows-11.16.2-1.windows.msi
+  & 'C:\Program Files\Curl\curl.exe' -# -G -k -L https://opscode-omnibus-packages.s3.amazonaws.com/windows/2008r2/x86_64/chef-windows-11.14.6-1.windows.msi -o chef-windows-11.14.6-1.windows.msi
   Log_Status  "Executing Chef installer..."
-  Start-Process -FilePath "msiexec.exe" -ArgumentList '/qn /passive /i chef-windows-11.16.2-1.windows.msi ADDLOCAL="ChefClientFeature,ChefServiceFeature" /norestart' -Wait
-  del chef-windows-11.16.2-1.windows.msi
+  Start-Process -FilePath "msiexec.exe" -ArgumentList '/qn /passive /i chef-windows-11.14.6-1.windows.msi ADDLOCAL="ChefClientFeature,ChefServiceFeature" /norestart' -Wait
+  del chef-windows-11.14.6-1.windows.msi
   SetX Path "${Env:Path};C:\opscode\chef\embedded\bin" /m
   $Env:Path += ';C:\opscode\chef\embedded\bin'
   Log_Status "Create System Environment variable for the chef node name"
