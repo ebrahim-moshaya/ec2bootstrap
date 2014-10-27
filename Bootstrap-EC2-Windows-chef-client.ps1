@@ -2,12 +2,21 @@
 #
 # <powershell>
 # Set-ExecutionPolicy Unrestricted
-# icm $executioncontext.InvokeCommand.NewScriptBlock((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/ebrahim-moshaya/ec2bootstrap/master/Bootstrap-EC2-Windows-chef-client.ps1'))
+# icm $executioncontext.InvokeCommand.NewScriptBlock((New-Object Net.WebClient).DownloadString('https://raw.githubusercontent.com/ebrahim-moshaya/ec2bootstrap/master/Bootstrap-EC2-Windows.ps1')) -ArgumentList "AWSAccessKey", "AWSSecretKey"
 # </powershell>
 #
 
 # Pass in the following Parameters
+param(
 
+  [Parameter(Mandatory=$true)]
+  [string]
+  $AWSAccessKey,
+  
+  [Parameter(Mandatory=$true)]
+  [string]
+  $AWSSecretKey
+)
 
 Start-Transcript -Path 'c:\bootstrap-transcript.txt' -append -Force 
 Set-StrictMode -Version Latest
@@ -15,34 +24,34 @@ Set-ExecutionPolicy Unrestricted -force
 
 $log = 'c:\Bootstrap.txt'
 $client = new-object System.Net.WebClient
-$bootstrapqueue = "https://sqs.eu-west-1.amazonaws.com/662182053957/BootstrapQueue"
-
+$shell_app = new-object -com shell.application
 
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#	Function:	Download-Bucket-File
 #
-# Detect Processor Architecture and OperatingSystemSKU
-# http://blogs.msdn.com/b/david.wang/archive/2006/03/26/howto-detect-process-bitness.aspx
-# http://msdn.microsoft.com/en-us/library/ms724358.aspx
+#	Comments:	This function is intended to download a specific file from S3.
+#
 #
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
-
-$systemPath = [Environment]::GetFolderPath([Environment+SpecialFolder]::System)
-$sysNative = [IO.Path]::Combine($env:windir, "sysnative")
-
-$Is32Bit = (($Env:PROCESSOR_ARCHITECTURE -eq 'x86') -and ($Env:PROCESSOR_ARCHITEW6432 -eq $null))
-Add-Content $log -value "Is 32-bit [$Is32Bit]"
-
-
-$coreEditions = @(0x0c,0x27,0x0e,0x29,0x2a,0x0d,0x28,0x1d)
-$IsCore = $coreEditions -contains (Get-WmiObject -Query "Select OperatingSystemSKU from Win32_OperatingSystem" | Select -ExpandProperty OperatingSystemSKU)
-Add-Content $log -value "Is Core [$IsCore]"
-
-# move to home, PS is incredibly complex :)
-cd $Env:USERPROFILE
-Set-Location -Path $Env:USERPROFILE
-[Environment]::CurrentDirectory=(Get-Location -PSProvider FileSystem).ProviderPath
-
+function Download-Bucket-File ($Filename, $Bucket, $Destination)
+{
+  $status = "Downloading " + $Filename + " from S3 [" + $Bucket + "]"
+  
+  Log_Status $status
+  
+  
+  $FullPath = $Destination + "\" + $Filename
+  
+  Read-S3Object -BucketName $Bucket -Key $Filename -File $FullPath -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey
+  
+  Wait-Until-Downloaded $FullPath
+  
+  $status = "Downloaded " + $Filename + " from S3 [" + $Bucket + "]"
+  
+  Log_Status $status
+  
+}
 
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
@@ -60,18 +69,20 @@ function CHEF
   {
     mkdir $chef_dir
   }
-  Log_Status "Create System Environment variable for the chef node name"
+  SetX Path "${Env:Path};C:\opscode\chef\bin" /m
+  $Env:Path += ';C:\opscode\chef\bin'
+  Log_Status "Created chef directory" 
+  #	Download Chef.rb and validation key
+  Download-Bucket-File "client.rb"  "chefbootstrap-jenkins" $chef_dir
+  Download-Bucket-File "validation.pem"  "chefbootstrap-jenkins" $chef_dir
   [Environment]::SetEnvironmentVariable("CHEFNODE", "JenkinsSlave-${env:Computername}", "Machine")
   "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
-  "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\knife.rb -append -Encoding UTF8
   cd $chef_dir
   chef-service-manager -a install
   &sc.exe config chef-client start= auto
-  chef-client
-  knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_slave]' 2>&1 | tee -a c:\chef\knife.log
-  chef-client
-  Log_Status  "Executed Chef installer" 
+  chef-client -r "role[jenkins_windows_slave]"
 }
+
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 #	Function:	Log_Status
@@ -82,27 +93,25 @@ function CHEF
 
 function Log_Status ($message)
 {
-  
-  Add-Content $log -value $message
   Add-Content $log -value $message
   Write-Host $message -ForegroundColor Green
-  Send-SQSMessage -QueueUrl $bootstrapqueue -Region "eu-west-1" -MessageBody $message -AccessKey $AWSAccessKey -SecretKey $AWSSecretKey
 }
 
 
-Log_Status "Downloading and Installing Chef Client" 
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#
+#	Section	:	Script begins here
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+
+Log_Status "Started bootstrapping EC2 Instance"
+
+Log_Status "Configuring Chef-Client" 
 CHEF
-Log_Status "Finished installing Chef Client" 
+Log_Status "Finished configuring chef-client" 
+
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
+Log_Status "Finished bootstrapping"
 
-
-#wait a bit, it's windows after all
-Start-Sleep -m 10000
-
-#Write-Host "Press any key to reboot and finish image configuration"
-#[void]$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
- 
-
-#Restart-Computer
