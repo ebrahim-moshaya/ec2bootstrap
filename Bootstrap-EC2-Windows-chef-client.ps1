@@ -107,12 +107,16 @@ function CHEF
   #	Download Chef.rb and validation key
   Download-Bucket-File "client.rb"  "chefbootstrap-jenkins" $chef_dir
   Download-Bucket-File "validation.pem"  "chefbootstrap-jenkins" $chef_dir
+  Download-Bucket-File "knife.rb"  "chefbootstrap-jenkins" $chef_dir
   [Environment]::SetEnvironmentVariable("CHEFNODE", "JenkinsSlave-${env:Computername}", "Machine")
   "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
+  "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\knife.rb -append -Encoding UTF8
   cd $chef_dir
   chef-service-manager -a install
   &sc.exe config chef-client start= auto
-  chef-client -r "role[jenkins_windows_slave]"
+  chef-client
+  knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_windows_slave]' 2>&1 | tee -a c:\chef\knife.log
+  chef-client
 }
 
 
