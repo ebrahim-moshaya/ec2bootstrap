@@ -8,7 +8,6 @@
 
 # Pass in the following Parameters
 param(
-
   [Parameter(Mandatory=$true)]
   [string]
   $AWSAccessKey,
@@ -26,6 +25,21 @@ $log = 'c:\Bootstrap.txt'
 $client = new-object System.Net.WebClient
 $shell_app = new-object -com shell.application
 
+
+while (($AWSAccessKey -eq $null) -or ($AWSAccessKey -eq ''))
+{
+  $AWSAccessKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty AWS AccessKey" -AsSecureString)))
+}
+
+while (($AWSSecretKey -eq $null) -or ($AWSSecretKey -eq ''))
+{
+  $AWSSecretKey = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR((Read-Host "Enter a non-null / non-empty AWS SecretKey" -AsSecureString)))
+}
+
+# move to home, PS is incredibly complex :)
+cd $Env:USERPROFILE
+Set-Location -Path $Env:USERPROFILE
+[Environment]::CurrentDirectory=(Get-Location -PSProvider FileSystem).ProviderPath
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 #	Function:	Download-Bucket-File
@@ -51,6 +65,24 @@ function Download-Bucket-File ($Filename, $Bucket, $Destination)
   
   Log_Status $status
   
+}
+
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+#	Function:	Wait-Until-Downloaded
+#
+#	Comments:	This function is intended to wait until a particular file has been downloaded.
+#
+#	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
+function Wait-Until-Downloaded ($Path)
+{
+  While (1 -eq 1) {
+    IF (Test-Path $Path ) {
+      #file exists. break loop
+      break
+    }
+    #sleep for 60 seconds, then check again
+    Start-Sleep -s 60
+  }
 }
 
 
