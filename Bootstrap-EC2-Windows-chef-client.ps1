@@ -101,6 +101,11 @@ function CHEF
   {
     mkdir $chef_dir
   }
+  else
+  {
+    rm $chef_dir
+    mkdir $chef_dir
+  }
   SetX Path "${Env:Path};C:\opscode\chef\bin" /m
   $Env:Path += ';C:\opscode\chef\bin'
   Log_Status "Created chef directory" 
