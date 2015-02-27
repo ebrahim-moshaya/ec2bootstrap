@@ -37,8 +37,8 @@ while (($AWSSecretKey -eq $null) -or ($AWSSecretKey -eq ''))
 }
 
 # move to home, PS is incredibly complex :)
-cd $Env:USERPROFILE
-Set-Location -Path $Env:USERPROFILE
+cd $USERPROFILE
+Set-Location -Path $USERPROFILE
 [Environment]::CurrentDirectory=(Get-Location -PSProvider FileSystem).ProviderPath
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
@@ -103,10 +103,11 @@ function CHEF
   }
   else
   {
-    rm $chef_dir
+    Log_Status "Removed chef directory" 
+    Remove-Item -Recurse -Force some_dir
     mkdir $chef_dir
   }
-  SetX Path "${Env:Path};C:\opscode\chef\bin" /m
+  SetX Path "${Path};C:\opscode\chef\bin" /m
   $Env:Path += ';C:\opscode\chef\bin'
   Log_Status "Created chef directory" 
   #	Download Chef.rb and validation key
@@ -119,9 +120,8 @@ function CHEF
   cd $chef_dir
   chef-service-manager -a install
   &sc.exe config chef-client start= auto
-  chef-client
-  knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_windows_slave]' 2>&1 | tee -a c:\chef\knife.log
-  chef-client
+  knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_windows_slave]' *>&1 | tee -a c:\chef\knife.log
+  chef-client *>&1 | tee -a c:\chef\chef-client-run.log
 }
 
 
