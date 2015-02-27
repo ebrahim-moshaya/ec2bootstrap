@@ -104,7 +104,7 @@ function CHEF
   else
   {
     Log_Status "Removed chef directory" 
-    Remove-Item -Recurse -Force some_dir
+    Remove-Item -Recurse -Force $chef_dir
     mkdir $chef_dir
   }
   SetX Path "${Path};C:\opscode\chef\bin" /m
