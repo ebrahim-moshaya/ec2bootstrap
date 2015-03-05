@@ -147,10 +147,16 @@ function Log_Status ($message)
 
 Log_Status "Started bootstrapping EC2 Instance"
 
-Log_Status "Configuring Chef-Client" 
-CHEF
-Log_Status "Finished configuring chef-client" 
-
+if (SCHTASKS /Query | findstr /B /I "chef-clients")
+{ 
+  echo "skip"
+}
+else 
+{
+  Log_Status "Configuring Chef-Client" 
+  CHEF
+  Log_Status "Finished configuring chef-client" 
+}
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
 
