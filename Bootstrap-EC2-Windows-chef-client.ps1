@@ -37,8 +37,8 @@ while (($AWSSecretKey -eq $null) -or ($AWSSecretKey -eq ''))
 }
 
 # move to home, PS is incredibly complex :)
-cd $USERPROFILE
-Set-Location -Path $USERPROFILE
+cd $ENV:USERPROFILE
+Set-Location -Path $ENV:USERPROFILE
 [Environment]::CurrentDirectory=(Get-Location -PSProvider FileSystem).ProviderPath
 
 #	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-	-
@@ -107,7 +107,7 @@ function CHEF
     Remove-Item -Recurse -Force $chef_dir
     mkdir $chef_dir
   }
-  SetX Path "${Path};C:\opscode\chef\bin" /m
+  SetX Path "${env:Path};C:\opscode\chef\bin" /m
   $Env:Path += ';C:\opscode\chef\bin'
   Log_Status "Created chef directory" 
   #	Download Chef.rb and validation key
@@ -147,7 +147,7 @@ function Log_Status ($message)
 
 Log_Status "Started bootstrapping EC2 Instance"
 
-if (SCHTASKS /Query | findstr /B /I "chef-clients")
+if (&C:\Windows\System32\schtasks.exe /Query | &C:\Windows\System32\findstr.exe /B /I "chef-clients")
 { 
   echo "skip"
 }
