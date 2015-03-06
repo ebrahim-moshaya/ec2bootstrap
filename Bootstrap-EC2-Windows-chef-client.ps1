@@ -147,7 +147,7 @@ function Log_Status ($message)
 
 Log_Status "Started bootstrapping EC2 Instance"
 
-if (&C:\Windows\System32\schtasks.exe /Query | &C:\Windows\System32\findstr.exe /B /I "chef-clients")
+if (&C:\Windows\System32\schtasks.exe /Query | &C:\Windows\System32\findstr.exe /B /I "chef-client")
 { 
   echo "skip"
 }
