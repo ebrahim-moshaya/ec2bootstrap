@@ -118,8 +118,7 @@ function CHEF
   "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\client.rb -append -Encoding UTF8
   "node_name 'JenkinsSlave-${env:ComputerName}'" | out-file -filepath C:\chef\knife.rb -append -Encoding UTF8
   cd $chef_dir
-  chef-service-manager -a install
-  &sc.exe config chef-client start= auto
+  schtasks /create /tn "chef-client" /tr C:\opscode\chefdk\bin\chef-client.bat /RU SYSTEM /RL HIGHEST /sc onstart
   knife node run_list add JenkinsSlave-${env:Computername} 'role[jenkins_windows_slave]' *>&1 | tee -a c:\chef\knife.log
   chef-client *>&1 | tee -a c:\chef\chef-client-run.log
 }
