@@ -91,6 +91,38 @@ function Download-Bucket-File ($Filename, $Bucket, $Destination)
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Function: Download-and-unzip-File
+#
+# Comments: This function is intended to download a specific file from S3 and then unzip it
+#
+# - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+function unzip-File ($Filename, $Destination, $Unzipto)
+{
+
+$FullPath = $Destination + "\" + $Filename
+
+$zip_file = $shell_app.namespace($fullpath)
+
+$status = "Unzipping " + $Filename 
+
+Log_Status $status
+
+
+#set the destination directory for the extracts
+$UnzipDirectory = $shell_app.namespace($Unzipto)
+
+#unzip the file
+$UnzipDirectory.Copyhere($zip_file.items())
+
+$status = "Unzipped " + $Filename 
+
+Log_Status $status
+
+}
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Function: Wait-Until-Downloaded
 #
 # Comments: This function is intended to wait until a particular file has been downloaded.
@@ -154,11 +186,11 @@ function CHEF
     If (!(Test-Path $destchefDir\\chefsolo.json))
     {
       Log_Status "Download bucket Chef bootstrap files onto $destchefDir"
-      Download-Bucket-File "roles.json"  "chefbootstrap-jenkins\msbuildpackage" $chef_dir
-      Download-Bucket-File "validation.pem"  "chefbootstrap-jenkins\msbuildpackage" $chef_dir
-      Download-Bucket-File "solo.rb"  "chefbootstrap-jenkins\msbuildpackage" $chef_dir
-      Download-Bucket-File "chefsolo.json"  "chefbootstrap-jenkins\msbuildpackage" $chef_dir
-      Download-Bucket-File "chef_bootstrap.pem"  "chefbootstrap-jenkins\msbuildpackage" $chef_dir
+      Download-Bucket-File "roles.json"  "chefbootstrap-jenkins/msbuildpackage" $destchefDir
+      Download-Bucket-File "validation.pem"  "chefbootstrap-jenkins/msbuildpackage" $destchefDir
+      Download-Bucket-File "solo.rb"  "chefbootstrap-jenkins/msbuildpackage" $destchefDir
+      Download-Bucket-File "chefsolo.json"  "chefbootstrap-jenkins/msbuildpackage" $destchefDir
+      Download-Bucket-File "chef_bootstrap.pem"  "chefbootstrap-jenkins/msbuildpackage" $destchefDir
     }
     Else
     {
@@ -175,10 +207,10 @@ function CHEF
       Log_Status "$desttmpDir already exists"
     }
 
-    If (!(Test-Path $desttmpDir\\nvm_bootstrap.tar.gz))
+    If (!(Test-Path $desttmpDir\\nvm_bootstrap.zip))
     {
-      Log_Status "downloading nvm_bootstrap.tar.gz"
-      Invoke-WebRequest -Verbose http://nvmchef-bootstrap.s3-website-eu-west-1.amazonaws.com/nvm_bootstrap.tar.gz -OutFile $desttmpDir\\nvm_bootstrap.tar.gz
+      Log_Status "downloading nvm_bootstrap.zip"
+      Invoke-WebRequest -Verbose http://nvmchef-bootstrap.s3-website-eu-west-1.amazonaws.com/nvm_bootstrap.zip -OutFile $desttmpDir\\nvm_bootstrap.zip
       If (!(Test-Path $desttmpDir\\chef-solo))
       {
         mkdir -path $desttmpDir\\chef-solo
@@ -190,16 +222,17 @@ function CHEF
     }
     Else
     {
-      Log_Status "nvm_bootstrap.tar.gz already exists"
+      Log_Status "nvm_bootstrap.zip already exists"
     }
 
     If (!(Test-Path $desttmpDir\\chef-solo\\cookbooks))
     {
-      tar -C /cygdrive/c/tmp/chef-solo -xvf /cygdrive/c/tmp/nvm_bootstrap.tar.gz
+      $unzipdest = Join-Path $desttmpDir "chef-solo"
+      unzip-File "nvm_bootstrap.zip" "c:\tmp" "c:\tmp\chef-solo"
     }
     Else
     {
-      Log_Status "nvm_bootstrap.tar.gz already extracted"
+      Log_Status "nvm_bootstrap.zip already extracted"
     }
 
     # Ensure the ohai ec2 hints file exists
